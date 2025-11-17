@@ -1,4 +1,4 @@
-import type { CreateVehicleRequest, Vehicle } from '@/interfaces/vehicle.interface';
+import type { CreateVehicleRequest, UpdateVehicleRequest, Vehicle } from '@/interfaces/vehicle.interface';
 import type { CommonResponseInterface } from '@/interfaces/common.response.interface';
 import { defineStore } from 'pinia';
 import axios from 'axios';
@@ -35,7 +35,6 @@ export const useVehicleStore = defineStore('vehicle', {
             }
          },
     
-
     async getVehicle(id: string) {
         this.loading = true;
         this.error = null;
@@ -74,7 +73,7 @@ export const useVehicleStore = defineStore('vehicle', {
         }
     },
 
-async updateVehicle(vehicleData: Vehicle) {
+async updateVehicle(vehicleData: UpdateVehicleRequest) {
   this.loading = true;
   this.error = null;
 
@@ -85,27 +84,28 @@ async updateVehicle(vehicleData: Vehicle) {
     );
 
     if (response.status === 200 || response.status === 201) {
+      // replace existing data
       const idx = this.vehicles.findIndex(v => v.id === vehicleData.id);
-      
       if (idx !== -1) {
         this.vehicles[idx] = response.data.data;
-      } else {
-        this.vehicles.push(response.data.data);
       }
 
       toast.success('Kendaraan berhasil diperbarui');
-      return response.data.data;
-    } else if (response.status === 400) {
-      toast.warning('Gagal memperbarui kendaraan: Data tidak valid');
+      return true;
     }
+
+    toast.warning('Gagal memperbarui kendaraan');
+    return false;
+
   } catch (error) {
     this.error = error instanceof Error ? error.message : 'Unknown error';
     toast.error(`Error saat memperbarui kendaraan: ${this.error}`);
-    return null;
+    return false;
   } finally {
     this.loading = false;
   }
 },
+
 
 
     async deleteVehicle(id: string) {
@@ -129,5 +129,6 @@ async updateVehicle(vehicleData: Vehicle) {
         }
     },
     }
+
 
 });

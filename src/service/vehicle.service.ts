@@ -1,25 +1,10 @@
 import type { Vehicle, VehicleRequest } from '@/interfaces/vehicle.interface';
 
 const vehicles: Vehicle[] = [
-{
-    id: 'VEH0001',
-    rentalVendorId: 1,
-    rentalVendorName: 'Toyota Rent',
-    type: 'SUV',
-    brand: 'Toyota',
-    model: 'Fortuner VRZ',
-    productionYear: 2022,
-    location: 'Jawa Timur',
-    licensePlate: 'B 1234 XYZ',
-    capacity: 7,
-    transmission: 'Manual',
-    fuelType: 'Diesel',
-    price: 950000,
-    status: 'Available',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-},
 ];
+
+console.log("VITE_API_URL =", import.meta.env.VITE_API_URL)
+
 
 function generateVehicleId(): string {
   const prefix = 'VEH'
@@ -41,7 +26,7 @@ export class VehicleService {
         return VehicleService.instance;
     }
 
-    createVehicle(vehicle: VehicleRequest): Vehicle {
+  createVehicle(vehicle: VehicleRequest): Vehicle {
     const newVehicle: Vehicle = {
         id: generateVehicleId(),
         rentalVendorId: vehicle.rentalVendorId,
@@ -77,7 +62,7 @@ export class VehicleService {
     deleteVehicle(id: string): boolean {
         const v = this.getVehicle(id)
         if (!v) return false
-        if (v.status === "In Use") throw new Error("Cannot delete rented vehicle")
+        if (v.status === "In Use") throw new Error("Cannot delete In Use rented vehicle")
         v.status = "Unavailable"
         v.updatedAt = new Date()
         return true

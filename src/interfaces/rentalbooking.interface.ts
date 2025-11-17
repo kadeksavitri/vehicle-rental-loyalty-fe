@@ -1,17 +1,13 @@
 // src/interfaces/rentalbooking.interface.ts
 
-import type { Vehicle } from './vehicle.interface'
-
-
 export interface RentalBooking {
   id: string
   vehicleId: string
-  vehicle?: Vehicle 
   pickUpTime: string
   dropOffTime: string
   pickUpLocation: string
   dropOffLocation: string
-  capacityNeeded?: number
+  capacityNeeded: number
   transmissionNeeded: string
   totalPrice: number
   includeDriver: boolean
@@ -25,12 +21,11 @@ export interface RentalBooking {
 export interface RentalBookingRequest {
   id: string
   vehicleId: string
-  vehicle?: Vehicle 
   pickUpTime: string
   dropOffTime: string
   pickUpLocation: string
   dropOffLocation: string
-  capacityNeeded?: number
+  capacityNeeded: number
   transmissionNeeded: string
   totalPrice: number
   includeDriver: boolean
@@ -42,7 +37,6 @@ export interface RentalAddOn {
   id: string
   name: string
   price: number
-  description?: string
 }
 
 export interface CreateRentalBookingRequest {
@@ -56,6 +50,7 @@ export interface CreateRentalBookingRequest {
   totalPrice: number
   listOfAddOns?: string[] 
   includeDriver: boolean
+  vehicleDailyPrice: number
 }
 
 export interface UpdateRentalBookingRequest {
@@ -71,6 +66,7 @@ export interface UpdateRentalBookingRequest {
   listOfAddOns?: string[]
   includeDriver: boolean
   status: string
+  vehicleDailyPrice: number
 }
 
 export interface UpdateRentalBookingStatusRequest {
@@ -87,8 +83,8 @@ export interface DeleteRentalBookingRequest {
   id: string
 }
 
-export interface ChartRentalBookingRequest {
-  period: 'Monthly' | 'Quarterly'
-  year: number
-}
+// export interface ChartRentalBookingRequest {
+//   period: 'Monthly' | 'Quarterly'
+//   year: number
+// }
 

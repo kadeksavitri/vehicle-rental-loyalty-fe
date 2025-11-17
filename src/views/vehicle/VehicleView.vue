@@ -7,6 +7,7 @@ import VButton from '@/components/common/VButton.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
 
+
 const vehicleStore = useVehicleStore()
 const searchKeyword = ref('')
 const filterType = ref('All')
@@ -84,23 +85,20 @@ const columns: ColumnDef<Vehicle>[] = [
 
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
+    <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Vehicle List</h1>
     <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
-      <!-- Title -->
-      <h1 class="text-2xl font-semibold text-[#1aa546] mb-4">
-        Vehicle Rental App
-      </h1>
 
       <!-- Button Row -->
       <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
         <div class="flex gap-2">
           <RouterLink
-            to="/vehicles/create"
+            to="/vehicles/add"
             class="bg-[#1aa546] hover:bg-[#15903c] text-white font-semibold px-4 py-2 rounded-md"
           >
             Add A New Vehicle
           </RouterLink>
           <RouterLink
-            to="/vehicles/statistics"
+            to="/bookings/statistics"
             class="bg-[#17a2b8] hover:bg-[#117a8b] text-white font-semibold px-4 py-2 rounded-md"
           >
             Statistics

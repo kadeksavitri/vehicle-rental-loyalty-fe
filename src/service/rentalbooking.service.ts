@@ -1,4 +1,4 @@
-import type { ChartRentalBookingRequest, CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalAddOn, RentalBooking, RentalBookingRequest, UpdateRentalBookingAddOnRequest, UpdateRentalBookingRequest, UpdateRentalBookingStatusRequest } from '@/interfaces/rentalbooking.interface';
+import type {  CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalAddOn, RentalBooking, RentalBookingRequest, UpdateRentalBookingAddOnRequest, UpdateRentalBookingRequest, UpdateRentalBookingStatusRequest } from '@/interfaces/rentalbooking.interface';
 
 const rentalBookings: RentalBooking[] = [];
 
@@ -28,41 +28,43 @@ export class RentalBookingService {
     }
 
 createRentalBooking(req: CreateRentalBookingRequest): RentalBooking {
-    const addOns: RentalAddOn[] =
-      req.listOfAddOns?.map((id) => rentalAddOns.find((a) => a.id === id)!) || []
+  const addOns: RentalAddOn[] =
+    req.listOfAddOns?.map((id) => rentalAddOns.find((a) => a.id === id)!) || []
 
-    const pickUp = new Date(req.pickUpTime)
-    const dropOff = new Date(req.dropOffTime)
-    const days = Math.max(
-      1,
-      Math.ceil((dropOff.getTime() - pickUp.getTime()) / (1000 * 60 * 60 * 24))
-    )
+  // hitung hari
+  const pickUp = new Date(req.pickUpTime)
+  const dropOff = new Date(req.dropOffTime)
+  const days = Math.max(
+    1,
+    Math.ceil((dropOff.getTime() - pickUp.getTime()) / (1000 * 60 * 60 * 24))
+  )
 
-    const basePrice = req.totalPrice || 0
-    const driverFee = req.includeDriver ? days * 100000 : 0
-    const addOnTotal = addOns.reduce((sum, a) => sum + (a?.price ?? 0), 0)
-    const total = basePrice + driverFee + addOnTotal
+  // base price dihitung di service, bukan FE
+  const basePrice = req.vehicleDailyPrice * days
 
-    const newBooking: RentalBooking = {
-      id: generateRentalBookingId(),
-      vehicleId: req.vehicleId,
-      pickUpTime: req.pickUpTime,
-      dropOffTime: req.dropOffTime,
-      pickUpLocation: req.pickUpLocation,
-      dropOffLocation: req.dropOffLocation,
-      capacityNeeded: req.capacityNeeded,
-      transmissionNeeded: req.transmissionNeeded,
-      includeDriver: req.includeDriver,
-      totalPrice: total,
-      status: "Upcoming",
-      listOfAddOns: addOns,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
+  // driver fee
+  const driverFee = req.includeDriver ? days * 100000 : 0
 
-    rentalBookings.push(newBooking)
-    return newBooking
+  // add-ons fee
+  const addOnTotal = addOns.reduce((sum, a) => sum + (a?.price ?? 0), 0)
+
+  // total akhir
+  const total = basePrice + driverFee + addOnTotal
+
+  const newBooking: RentalBooking = {
+    ...req,
+    id: generateRentalBookingId(),
+    totalPrice: total,
+    status: "Upcoming",
+    listOfAddOns: addOns,
+    createdAt: new Date(),
+    updatedAt: new Date(),
   }
+
+  rentalBookings.push(newBooking)
+  return newBooking
+}
+
 
     getAllRentalBookings(): RentalBooking[] {
         return rentalBookings.sort(
@@ -86,32 +88,35 @@ createRentalBooking(req: CreateRentalBookingRequest): RentalBooking {
     }
 
 
-  updateRentalBooking(req: UpdateRentalBookingRequest): RentalBooking | undefined {
-    const booking = this.getRentalBooking(req.id)
-    if (!booking) return undefined
-    if (booking.status !== "Upcoming") return undefined
+updateRentalBooking(req: UpdateRentalBookingRequest): RentalBooking | undefined {
+  const booking = this.getRentalBooking(req.id)
+  if (!booking) return undefined
+  if (booking.status !== "Upcoming") return undefined
 
-    const pickUp = new Date(req.pickUpTime)
-    const dropOff = new Date(req.dropOffTime)
-    const days = Math.max(
-      1,
-      Math.ceil((dropOff.getTime() - pickUp.getTime()) / (1000 * 60 * 60 * 24))
-    )
+  const pickUp = new Date(req.pickUpTime)
+  const dropOff = new Date(req.dropOffTime)
+  const days = Math.max(
+    1,
+    Math.ceil((dropOff.getTime() - pickUp.getTime()) / (1000 * 60 * 60 * 24))
+  )
 
-    const addOns: RentalAddOn[] =
-      req.listOfAddOns?.map((id) => rentalAddOns.find((a) => a.id === id)!) || []
+  const addOns =
+    req.listOfAddOns?.map(id => rentalAddOns.find(a => a.id === id)!) || []
 
-    const driverFee = req.includeDriver ? days * 100000 : 0
-    const addOnTotal = addOns.reduce((sum, a) => sum + (a?.price ?? 0), 0)
-    const total = req.totalPrice + driverFee + addOnTotal
+  const basePrice = req.vehicleDailyPrice * days
+  const driverFee = req.includeDriver ? days * 100000 : 0
+  const addOnTotal = addOns.reduce((s, a) => s + (a?.price ?? 0), 0)
+  const total = basePrice + driverFee + addOnTotal
 
-    Object.assign(booking, req, {
-      listOfAddOns: addOns,
-      totalPrice: total,
-      updatedAt: new Date(),
-    })
-    return booking
-  }
+  Object.assign(booking, req, {
+    listOfAddOns: addOns,
+    totalPrice: total,
+    updatedAt: new Date(),
+  })
+
+  return booking
+}
+
 
   updateRentalBookingStatus(req: UpdateRentalBookingStatusRequest): RentalBooking | undefined {
     const booking = this.getRentalBooking(req.id)
@@ -152,6 +157,23 @@ createRentalBooking(req: CreateRentalBookingRequest): RentalBooking {
     booking.updatedAt = new Date()
     return booking
   }
+
+  previewVehiclePrice(vehicleDailyPrice: number, pick: string, drop: string) {
+    const pickUp = new Date(pick);
+    const dropOff = new Date(drop);
+    const days = Math.max(
+      1,
+      Math.ceil((dropOff.getTime() - pickUp.getTime()) / (1000 * 60 * 60 * 24))
+    );
+
+    return {
+      days,
+      basePrice: vehicleDailyPrice * days,
+      driverFee: 100000 * days,     // driver belum dipilih di step ini
+      grandTotal: vehicleDailyPrice * days
+    }
+  }
+
 
 // chartRentalBookings(req: ChartRentalBookingRequest): { label: string; count: number }[] {
 //   const { period, year } = req

@@ -38,10 +38,10 @@ const table = useVueTable<T>({
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow overflow-hidden">
+  <div class="bg-white rounded-lg  overflow-hidden">
     <div class="overflow-x-auto">
       <!-- Entries per page -->
-      <div v-if="showEntriesPerPage" class="flex items-center gap-2 p-4 whitespace-nowrap">
+      <!-- <div v-if="showEntriesPerPage" class="flex items-center gap-2 p-4 whitespace-nowrap">
         <select
           :value="table.getState().pagination.pageSize"
           @change="table.setPageSize(Number(($event.target as HTMLSelectElement).value))"
@@ -52,14 +52,14 @@ const table = useVueTable<T>({
           </option>
         </select>
         <span class="text-sm text-gray-600">entries per page</span>
-      </div>
+      </div> -->
 
       <table class="w-full">
         <thead>
           <tr
             v-for="headerGroup in table.getHeaderGroups()"
             :key="headerGroup.id"
-            class="border-b border-gray-200"
+            class="border-b border-gray-200 "
           >
             <th
               v-for="header in headerGroup.headers"

@@ -1,4 +1,4 @@
-import type { ChartRentalBookingRequest, CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalBooking } from '@/interfaces/rentalbooking.interface';
+import type { CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalBooking } from '@/interfaces/rentalbooking.interface';
 import type { CommonResponseInterface } from '@/interfaces/common.response.interface';
 import { defineStore } from 'pinia';
 import axios from 'axios';
@@ -20,12 +20,12 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
 
             try {
                 const response = await axios.get<CommonResponseInterface<RentalBooking[]>>(baseRentalBookingUrl);
-                this.rentalBookings = response.data.data;
+                this.rentalBookings = response.data.data ?? [];
                 return this.rentalBookings;
 
             } catch (error) {
                 this.error = error instanceof Error ? error.message : 'Unknown error';
-                toast.error(`Error saat memuat post: ${this.error}`);
+                toast.error(`Error saat memuat rental booking: ${this.error}`);
             } finally {
                 this.loading = false;
             }
@@ -157,21 +157,21 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
             return false
         },
 
-        async chartRentalBookings(data: ChartRentalBookingRequest) {
-        this.loading = true;
-        try {
-            const res = await axios.post<CommonResponseInterface<{ label: string; count: number }[]>>(
-            `${baseRentalBookingUrl}/chart`,
-            data
-            );
-            return res.data.data;
-        } catch (err) {
-            toast.error('Gagal memuat data chart');
-            return [];
-        } finally {
-            this.loading = false;
-        }
-        },
+        // async chartRentalBookings(data: ChartRentalBookingRequest) {
+        // this.loading = true;
+        // try {
+        //     const res = await axios.post<CommonResponseInterface<{ label: string; count: number }[]>>(
+        //     `${baseRentalBookingUrl}/chart`,
+        //     data
+        //     );
+        //     return res.data.data;
+        // } catch (err) {
+        //     toast.error('Gagal memuat data chart');
+        //     return [];
+        // } finally {
+        //     this.loading = false;
+        // }
+        // },
     }
 
 })

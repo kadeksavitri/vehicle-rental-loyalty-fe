@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle/vehicle.store'
 import VButton from '@/components/common/VButton.vue'
+import VDeleteVehicleButton from '@/components/vehicle/VDeleteVehicleButton.vue'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
 import { toast } from 'vue-sonner'
 
@@ -30,15 +31,23 @@ onMounted(async () => {
   loading.value = false
 })
 
-// hapus kendaraan
 const handleDelete = async () => {
   if (!vehicle.value) return
+
   const confirmed = confirm('Apakah kamu yakin ingin menghapus kendaraan ini?')
   if (!confirmed) return
 
   const success = await store.deleteVehicle(vehicle.value.id)
-  if (success) router.push('/vehicles')
+
+  if (success) {
+    toast.success('Vehicle deleted successfully')
+    router.push('/vehicles')
+  } else {
+    toast.error('Failed to delete vehicle')
+  }
 }
+
+
 </script>
 
 <template>
@@ -55,17 +64,12 @@ const handleDelete = async () => {
           <h2 class="text-xl font-bold text-gray-800">Vehicle Details</h2>
           <div class="flex gap-2">
             <VButton
-              class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-4 py-2 rounded-lg"
-              @click="router.push(`/vehicles/edit/${vehicle.id}`)"
+                class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg whitespace-nowrap"
+               @click="router.push(`/vehicles/${vehicle.id}/edit`)"
             >
               Update Vehicle Details
             </VButton>
-            <VButton
-              class="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded-lg"
-              @click="handleDelete"
-            >
-              Delete Vehicle
-            </VButton>
+            <VDeleteVehicleButton :vehicle-id="vehicle.id" @deleted="handleDelete" />
           </div>
         </div>
 

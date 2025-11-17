@@ -1,82 +1,76 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle/vehicle.store'
+import { useVendorStore } from '@/stores/additional/vendor.store'
 import VVehicleForm from '@/components/vehicle/VVehicleForm.vue'
-import type { VehicleRequest } from '@/interfaces/vehicle.interface'
+import type { UpdateVehicleRequest } from '@/interfaces/vehicle.interface'
+import { toast } from 'vue-sonner'
 
-// setup
-const store = useVehicleStore()
 const route = useRoute()
 const router = useRouter()
 
-// reactive state
-const vehicleModel = ref<VehicleRequest | null>(null)
-const loading = ref(true)
+const vehicleStore = useVehicleStore()
+const vendorStore = useVendorStore()
 
-// dummy vendor data (bisa ganti nanti dari backend)
-const vendors = ref([
-  {
-    id: 1,
-    name: 'Indrajaya, Januar and Winardi',
-    listOfLocations: ['DKI Jakarta', 'Bandung', 'Surabaya'],
-  },
-  {
-    id: 2,
-    name: 'Auto Maju Rent',
-    listOfLocations: ['Bali', 'Yogyakarta', 'Semarang'],
-  },
-])
-
-// ambil id kendaraan dari route
 const id = route.params.id as string
 
-// ambil data kendaraan dari API/store
+const vehicleData = ref<UpdateVehicleRequest | null>(null)
+
 onMounted(async () => {
-  const data = await store.getVehicle(id)
-  if (data) {
-    vehicleModel.value = { ...data }
-  } else {
-    router.push('/vehicles')
+  await vendorStore.fetchVendors()
+
+  const data = await vehicleStore.getVehicle(id)
+
+  if (!data) {
+    toast.error("Kendaraan tidak ditemukan")
+    return router.push('/vehicles')
   }
-  loading.value = false
+
+  if (data.status === "In Use") {
+    toast.error("Kendaraan tidak dapat diubah karena sedang digunakan (In Use)")
+    return router.push(`/vehicles/${id}`)
+  }
+
+  vehicleData.value = {
+    id: data.id,
+    rentalVendorId: data.rentalVendorId,
+    rentalVendorName: data.rentalVendorName,
+    type: data.type,
+    brand: data.brand,
+    model: data.model,
+    productionYear: data.productionYear,
+    location: data.location,
+    licensePlate: data.licensePlate,
+    capacity: data.capacity,
+    transmission: data.transmission,
+    fuelType: data.fuelType,
+    price: data.price,
+    status: data.status,
+  }
 })
 
-// aksi update kendaraan
-const handleUpdate = async (data: VehicleRequest) => {
-  await store.updateVehicle(data as any)
-  router.push('/vehicles')
+const vendors = computed(() => vendorStore.vendors)
+
+const handleUpdate = async (updated: UpdateVehicleRequest) => {
+  const success = await vehicleStore.updateVehicle(updated)
+
+  if (success) {
+    toast.success("Kendaraan berhasil diperbarui")
+    router.push(`/vehicles/${updated.id}`)
+  }
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
-    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-8">
-      <h1 class="text-2xl font-semibold text-[#1aa546] mb-6">
-        Vehicle Rental App
-      </h1>
-
-      <div v-if="loading" class="text-center text-gray-500 py-20">
-        Loading vehicle data...
-      </div>
-
+    <div v-if="vehicleData">
       <VVehicleForm
-        v-else-if="vehicleModel"
-        :vehicleModel="vehicleModel"
+        :vehicleModel="vehicleData"
         :vendors="vendors"
         :action="handleUpdate"
         :isEdit="true"
       />
-
-      <div v-else class="text-center text-gray-500 py-20">
-        Vehicle not found.
-      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-h1 {
-  @apply mb-6;
-}
-</style>

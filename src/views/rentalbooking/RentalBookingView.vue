@@ -12,18 +12,15 @@ const store = useRentalBookingStore()
 const bookings = ref<RentalBooking[]>([])
 const loading = ref(true)
 
-// 🧩 Ambil data rental bookings dari store
 onMounted(async () => {
   await store.fetchRentalBookings()
-  bookings.value = store.rentalBookings
+  bookings.value = store.rentalBookings ?? []
   loading.value = false
 })
 
-// 💸 Format harga ke format Rupiah
 const formatRupiah = (value: number) =>
   'Rp ' + Number(value).toLocaleString('id-ID', { minimumFractionDigits: 2 })
 
-// 📅 Format tanggal waktu
 const formatDateTime = (iso: string) => {
   const date = new Date(iso)
   return date.toLocaleString('en-US', {
@@ -35,7 +32,6 @@ const formatDateTime = (iso: string) => {
   })
 }
 
-// 🧱 Kolom tabel
 const columns: ColumnDef<RentalBooking>[] = [
   {
     header: 'No',
@@ -88,26 +84,28 @@ const columns: ColumnDef<RentalBooking>[] = [
 
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
+    <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Booking List</h1>
     <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
-      <h1 class="text-2xl font-semibold text-[#1aa546] mb-6">
-        Vehicle Rental App
-      </h1>
 
-      <div class="flex justify-between items-center mb-4">
-        <VButton
-          class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg w-fit"
-          @click="router.push('/bookings/create')"
-        >
-          Create A New Booking
-        </VButton>
-      </div>
-
-      <div v-if="loading" class="text-center text-gray-500 py-20">
-        Loading bookings...
+      <!-- Button Row  -->
+      <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
+        <div class="flex gap-2">
+          <RouterLink
+            to="/bookings/add"
+            class="bg-[#1aa546] hover:bg-[#15903c] text-white font-semibold px-4 py-2 rounded-md"
+          >
+            Add A New Booking
+          </RouterLink>
+          <RouterLink
+            to="/bookings/statistics"
+            class="bg-[#17a2b8] hover:bg-[#117a8b] text-white font-semibold px-4 py-2 rounded-md"
+          >
+            Statistics
+          </RouterLink>
+        </div>
       </div>
 
       <VDataTable
-        v-else
         :data="bookings"
         :columns="columns"
         :page-size="10"
@@ -118,7 +116,4 @@ const columns: ColumnDef<RentalBooking>[] = [
 </template>
 
 <style scoped>
-h1 {
-  @apply mb-6;
-}
 </style>

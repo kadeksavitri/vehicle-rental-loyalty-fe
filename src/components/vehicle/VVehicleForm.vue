@@ -2,12 +2,15 @@
 import VInput from '../common/VInput.vue'
 import VButton from '../common/VButton.vue'
 import VDropdown from '../common/VDropdown.vue'
-import { type PropType, ref, watch, toRefs, computed } from 'vue'
+import { type PropType, ref, watch, toRefs } from 'vue'
 import { useRouter } from 'vue-router'
 import type { VehicleRequest } from '@/interfaces/vehicle.interface'
 
-const router = useRouter()
+// Stores
+import { useLocationStore } from '@/stores/additional/location.store'
+import { useVendorStore } from '@/stores/additional/vendor.store'
 
+// Props
 const props = defineProps({
   action: {
     type: Function as PropType<(data: VehicleRequest) => Promise<void>>,
@@ -18,7 +21,16 @@ const props = defineProps({
     required: true,
   },
   vendors: {
-    type: Array as PropType<{ id: number; name: string; listOfLocations: string[] }[]>,
+    /* Format vendor dari backend:
+        {
+          id: number,
+          name: string,
+          listOfLocations: string[]
+        }
+    */
+    type: Array as PropType<
+      { id: number; name: string; listOfLocations: string[] }[]
+    >,
     required: true,
   },
   isEdit: {
@@ -27,24 +39,27 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const router = useRouter()
 const model = toRefs(props).vehicleModel
 
-// 🧩 Lokasi dinamis berdasarkan vendor
+// 🔥 Lokasi dinamis berdasarkan vendor yang dipilih
 const availableLocations = ref<string[]>([])
+
 watch(
   () => model.value.rentalVendorId,
   (vendorId) => {
     const vendor = props.vendors.find((v) => v.id === Number(vendorId))
-    availableLocations.value = vendor ? vendor.listOfLocations : []
-    if (!availableLocations.value.includes(model.value.location)) {
+    availableLocations.value = vendor?.listOfLocations ?? []
+
+    // Reset location kalau tidak masuk list vendor
+    if (!availableLocations.value.includes(model.value.location ?? '')) {
       model.value.location = ''
     }
   },
   { immediate: true }
 )
 
-// 🧠 Dropdown static
+// STATIC OPTIONS
 const typeOptions = [
   { value: 'Sedan', label: 'Sedan' },
   { value: 'SUV', label: 'SUV' },
@@ -70,8 +85,11 @@ const statusOptions = [
   { value: 'In Use', label: 'In Use' },
 ]
 
-// 🚀 Actions
-const handleSubmit = async () => await props.action(model.value)
+// ACTIONS
+const handleSubmit = async () => {
+  await props.action(model.value)
+}
+
 const handleCancel = () => router.push('/vehicles')
 </script>
 
@@ -84,7 +102,7 @@ const handleCancel = () => router.push('/vehicles')
       {{ props.isEdit ? 'Update Vehicle' : 'Create a New Vehicle' }}
     </h2>
 
-    <!-- Rental Vendor -->
+    <!-- Vendor -->
     <VDropdown
       id="vendor"
       label="Rental Vendor"
@@ -173,7 +191,7 @@ const handleCancel = () => router.push('/vehicles')
       placeholder="Enter price"
     />
 
-    <!-- Status (only on edit) -->
+    <!-- Status (edit only) -->
     <VDropdown
       v-if="props.isEdit"
       id="status"
@@ -201,10 +219,3 @@ const handleCancel = () => router.push('/vehicles')
     </div>
   </form>
 </template>
-
-<style scoped>
-form input,
-form select {
-  @apply border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-[#1aa546] focus:outline-none;
-}
-</style>
