@@ -53,7 +53,6 @@ const handleDelete = async () => {
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-8">
-      <h1 class="text-2xl font-semibold text-[#1aa546] mb-6">Vehicle Rental App</h1>
 
       <div v-if="loading" class="text-center text-gray-500 py-20">
         Loading vehicle details...

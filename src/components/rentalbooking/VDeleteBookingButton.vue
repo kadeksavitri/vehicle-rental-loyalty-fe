@@ -16,14 +16,14 @@ const vehicleStore = useRentalBookingStore()
 
 const deleteRentalBooking = async () => {
   try {
-    await vehicleStore.deleteRentalBooking
-    toast.success('Vehicle deleted successfully')
-    // Emit after successful deletion
+    await vehicleStore.deleteRentalBooking({ id: rentalBookingId })
+    toast.success('Booking deleted successfully')
     emit('deleted', rentalBookingId)
   } catch (error) {
-    toast.error('Failed to delete vehicle')
+    toast.error('Failed to delete booking')
   }
 }
+
 </script>
 
 <template>

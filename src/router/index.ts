@@ -9,9 +9,10 @@ import CreateRentalBookingView from '@/views/rentalbooking/CreateRentalBookingVi
 import DetailRentalBookingView from '@/views/rentalbooking/DetailRentalBookingView.vue'
 import CreateAddOnRentalBookingView from '@/views/rentalbooking/CreateAddOnRentalBookingView.vue'
 import EditRentalBookingView from '@/views/rentalbooking/EditRentalBookingView.vue'
-
-// import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
-
+import EditAddOnBookingView from '@/views/rentalbooking/EditAddOnBookingView.vue'
+import VStatusForm from '@/components/rentalbooking/VStatusForm.vue'
+import VEditStatusBookingView from '@/views/rentalbooking/VEditStatusBookingView.vue'
+import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
 console.log("VITE_API_URL =", import.meta.env.VITE_API_URL)
 
 const router = createRouter({
@@ -42,36 +43,53 @@ const router = createRouter({
       name: 'edit-vehicle',
       component: EditVehicleView
     },
+{
+  path: '/bookings',
+  name: 'booking',
+  component: RentalBookingView
+},
+
+{
+  path: '/bookings/add',
+  name: 'create-booking',
+  component: CreateRentalBookingView
+},
+
+{
+  path: '/bookings/create/addons',
+  name: 'CreateBookingAddOns',
+  component: CreateAddOnRentalBookingView
+},
+
+{
+  path: '/bookings/:id/edit',
+  name: 'edit-booking',
+  component: EditRentalBookingView
+},
+
+{
+  path: '/bookings/:id/update-addons',
+  name: 'edit-booking-addons',
+  component: EditAddOnBookingView
+},
+
+{
+  path: '/bookings/:id/update-status',
+  name: 'update-status',
+  component: VEditStatusBookingView
+},
+
+{
+  path: '/bookings/:id',
+  name: 'detail-booking',
+  component: DetailRentalBookingView
+},
+
     {
-      path: '/bookings', 
-      name: 'booking',
-      component: RentalBookingView
-    },
-    {
-      path: '/bookings/add', 
-      name: 'create-booking',
-      component: CreateRentalBookingView
-    },
-    {
-      path: '/bookings/:id',
-      name: 'detail-booking',
-      component: DetailRentalBookingView
-    },
-    {
-      path: '/bookings/:id/edit',
-      name: 'edit-booking',
-      component: EditRentalBookingView
-    }, 
-    {
-      path: '/bookings/addons',
-      name: 'AddOnsForm',
-      component: CreateAddOnRentalBookingView
-    },
-    // {
-    //   path: 'bookings/statistics',
-    //   name: 'statistics',
-    //   component: ChartBookingView
-    // }
+      path: '/bookings/statistics',
+      name: 'statistics',
+      component: ChartBookingView
+    }
   ],
 })
 

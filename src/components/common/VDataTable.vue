@@ -39,20 +39,7 @@ const table = useVueTable<T>({
 
 <template>
   <div class="bg-white rounded-lg  overflow-hidden">
-    <div class="overflow-x-auto">
-      <!-- Entries per page -->
-      <!-- <div v-if="showEntriesPerPage" class="flex items-center gap-2 p-4 whitespace-nowrap">
-        <select
-          :value="table.getState().pagination.pageSize"
-          @change="table.setPageSize(Number(($event.target as HTMLSelectElement).value))"
-          class="border border-gray-300 rounded-md px-3 py-2 pr-8 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
-        >
-          <option v-for="size in pageSizeOptions" :key="size" :value="size">
-            {{ size }}
-          </option>
-        </select>
-        <span class="text-sm text-gray-600">entries per page</span>
-      </div> -->
+    <div class="overflow-x-auto border border-gray-300 rounded-lg">
 
       <table class="w-full">
         <thead>

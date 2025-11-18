@@ -1,4 +1,6 @@
-import type { CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalBooking } from '@/interfaces/rentalbooking.interface';
+// // stores/rentalbooking/booking.store.ts
+
+import type { CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalBooking, UpdateRentalBookingAddOnRequest, UpdateRentalBookingStatusRequest } from '@/interfaces/rentalbooking.interface';
 import type { CommonResponseInterface } from '@/interfaces/common.response.interface';
 import { defineStore } from 'pinia';
 import axios from 'axios';
@@ -90,14 +92,17 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
             }
         }, 
 
-        async updateRentalBookingStatus(bookingStatusData: RentalBooking) {
+        async updateRentalBookingStatus(bookingStatusData: UpdateRentalBookingStatusRequest) {
             this.loading = true;
             this.error = null;
 
             try {
-                const response = await axios.post<CommonResponseInterface<RentalBooking>>(`${baseRentalBookingUrl}/update-status`, bookingStatusData);
+                const response = await axios.put<CommonResponseInterface<RentalBooking>>(`${baseRentalBookingUrl}/update-status`, bookingStatusData);
                 if (response.status === 200 || response.status === 201) {
-                    this.rentalBookings.push(response.data.data);
+                    const idx = this.rentalBookings.findIndex(b => b.id === response.data.data.id)
+                    if (idx !== -1) {
+                    this.rentalBookings[idx] = response.data.data
+                    }
                     toast.success('Status booking berhasil diperbarui');
                     return response.data.data;
                 } else if (response.status === 400) {
@@ -112,12 +117,12 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
             }
         }, 
 
-        async updateRentalBookingAddOns(bookingAddOnsData: RentalBooking) {
+        async updateRentalBookingAddOns(bookingAddOnsData: UpdateRentalBookingAddOnRequest) {
             this.loading = true;
             this.error = null;
         
             try {
-                const response = await axios.post<CommonResponseInterface<RentalBooking>>(`${baseRentalBookingUrl}/update-addons`, bookingAddOnsData);
+                const response = await axios.put<CommonResponseInterface<RentalBooking>>(`${baseRentalBookingUrl}/update-addons`, bookingAddOnsData);
                 if (response.status === 200 || response.status === 201) {
                     this.rentalBookings.push(response.data.data);
                     toast.success('Add Ons booking berhasil diperbarui');
@@ -157,21 +162,27 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
             return false
         },
 
-        // async chartRentalBookings(data: ChartRentalBookingRequest) {
-        // this.loading = true;
-        // try {
-        //     const res = await axios.post<CommonResponseInterface<{ label: string; count: number }[]>>(
-        //     `${baseRentalBookingUrl}/chart`,
-        //     data
-        //     );
-        //     return res.data.data;
-        // } catch (err) {
-        //     toast.error('Gagal memuat data chart');
-        //     return [];
-        // } finally {
-        //     this.loading = false;
-        // }
-        // },
+        async chartRentalBookings(data: { period: string; year: number }) {
+        this.loading = true;
+        try {
+            const res = await axios.post<CommonResponseInterface<{ label: string; count: number }[]>>(
+            `${baseRentalBookingUrl}/chart`,
+            data
+            );
+            return res.data.data;
+        } catch (err) {
+            // Prefer server-provided message to bubble up to the caller
+            const serverMessage = (err as any)?.response?.data?.message
+            if (serverMessage) {
+                // rethrow with server message so view can display it
+                throw new Error(serverMessage)
+            }
+            toast.error('Gagal memuat data chart');
+            throw err
+        } finally {
+            this.loading = false;
+        }
+        },
     }
 
 })

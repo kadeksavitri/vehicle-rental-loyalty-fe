@@ -51,7 +51,6 @@ export interface CreateVehicleRequest {
 export interface UpdateVehicleRequest {
   id: string
   rentalVendorId: number
-  rentalVendorName: string 
   type: string
   brand: string
   model: string

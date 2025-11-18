@@ -102,6 +102,8 @@ const handleCancel = () => router.push('/vehicles')
       {{ props.isEdit ? 'Update Vehicle' : 'Create a New Vehicle' }}
     </h2>
 
+    <div class="border-b border-gray-500 -mt-6"></div>
+
     <!-- Vendor -->
     <VDropdown
       id="vendor"

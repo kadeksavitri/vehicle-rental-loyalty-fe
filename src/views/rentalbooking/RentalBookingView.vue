@@ -1,3 +1,5 @@
+<!-- views/rentalbooking/RentalBookingView.vue -->
+
 <script setup lang="ts">
 import { onMounted, ref, h } from 'vue'
 import { useRouter } from 'vue-router'
@@ -87,7 +89,6 @@ const columns: ColumnDef<RentalBooking>[] = [
     <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Booking List</h1>
     <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
 
-      <!-- Button Row  -->
       <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
         <div class="flex gap-2">
           <RouterLink

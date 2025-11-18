@@ -1,191 +1,214 @@
+<!-- views/rentalbooking/DetailRentalBookingView.vue -->
+
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.store'
+import { useAddOnStore } from '@/stores/additional/addon.store'
 import VButton from '@/components/common/VButton.vue'
 import type { RentalBooking } from '@/interfaces/rentalbooking.interface'
+import VDeleteBookingButton from '@/components/rentalbooking/VDeleteBookingButton.vue'
 
-const route = useRoute()
+
 const router = useRouter()
-const rentalBookingStore = useRentalBookingStore()
+const route = useRoute()
+const store = useRentalBookingStore()
 
-const { id: bookingId } = route.params as { id: string }
+const bookingId = route.params.id as string
+const booking = ref<RentalBooking | null>(null)
+const addOnStore = useAddOnStore()
+const displayedAddOns = computed(() => {
+  if (!booking.value) return []
+  const catalog = addOnStore.addOns ?? []
+  return (booking.value.listOfAddOns ?? []).map(a => {
+    if (!a) return null
+    return typeof a === 'string'
+      ? (catalog.find(x => x.id === a) ?? { id: a, name: a, price: 0 })
+      : a
+  }).filter(Boolean)
+})
+const showAddOns = ref(false)
 
-const rentalbooking = ref(undefined as undefined | RentalBooking)
-const showAddOnModal = ref(false)
-
-const getRentalBooking = async () => {
-  const getRentalBookingResponse = await rentalBookingStore.getRentalBooking(bookingId)
-  rentalbooking.value = getRentalBookingResponse ?? undefined
-}
-
+// Fetch booking
 onMounted(async () => {
-  await getRentalBooking()
-  if (!rentalbooking.value) {
+  const data = await store.getRentalBooking(bookingId)
+  if (!data) {
     toast.error('Booking not found')
     router.replace('/bookings')
+  } else {
+    booking.value = data
+    // ensure add-on catalog loaded so modal can display full add-on info
+    await addOnStore.fetchAddOns()
   }
 })
 
-const canUpdateDetails = computed(() => rentalbooking.value?.status === 'Upcoming')
-const canUpdateAddons = computed(() => rentalbooking.value?.status === 'Upcoming')
-const canUpdateStatus = computed(() =>
-  rentalbooking.value?.status === 'Upcoming' || rentalbooking.value?.status === 'Ongoing'
+// Conditions for buttons
+const canUpdateDetails = computed(() => booking.value?.status === 'Upcoming')
+const canUpdateAddOns = computed(() => booking.value?.status === 'Upcoming')
+const canUpdateStatus = computed(
+  () => booking.value?.status === 'Upcoming' || booking.value?.status === 'Ongoing'
 )
-const canCancel = computed(() => rentalbooking.value?.status === 'Upcoming')
-
+const canCancel = computed(() => booking.value?.status === 'Upcoming')
 </script>
 
 <template>
-  <main class="w-full min-h-screen bg-gray-100 pt-24 py-10 px-4 flex justify-center">
+  <main class="w-full min-h-screen bg-gray-100 pt-24 pb-12 px-4 flex justify-center">
     <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
 
-      <!-- HEADER -->
+      <!-- HEADER SECTION -->
       <div class="flex justify-between items-center border-b pb-4 mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Booking Details</h2>
 
-        <div class="flex gap-3">
-          <!-- Update Details -->
+        <div class="flex gap-2">
           <VButton
             v-if="canUpdateDetails"
-            color="success"
-            label="Update Details"
-            @click="router.push(`/bookings/${rentalbooking?.id}/update-details`)"
-          />
+            class="bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded"
+            @click="router.push(`/bookings/${booking?.id}/edit`)"
+          >
+            Update Booking Details
+          </VButton>
 
-          <!-- Update Add-ons -->
           <VButton
-            v-if="canUpdateAddons"
-            color="info"
-            label="Update Add-Ons"
-            @click="router.push(`/bookings/${rentalbooking?.id}/update-addons`)"
-          />
+            v-if="canUpdateAddOns"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded"
+            @click="router.push(`/bookings/${booking?.id}/update-addons`)"
+          >
+            Update Add-Ons
+          </VButton>
 
-          <!-- Update Status -->
           <VButton
             v-if="canUpdateStatus"
-            color="warning"
-            label="Update Status"
-            @click="router.push(`/bookings/${rentalbooking?.id}/update-status`)"
-          />
+            class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-1 rounded"
+            @click="router.push(`/bookings/${booking?.id}/update-status`)"
+          >
+            Update Status
+          </VButton>
 
-          <!-- Cancel -->
-          <VButton
+          <VDeleteBookingButton
             v-if="canCancel"
-            color="danger"
-            label="Cancel"
-            @click="router.push(`/bookings/${rentalbooking?.id}/delete`)"
+            :rentalBookingId="booking?.id!"
+            @deleted="router.push('/bookings')"
           />
+
+
         </div>
       </div>
 
-      <!-- DETAILS GRID -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 text-gray-700">
+      <!-- DETAILS -->
+      <div v-if="booking" class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 text-gray-700">
 
-        <!-- LEFT -->
         <div>
           <p>
-            <strong>Booking ID</strong><br />
-            <span class="text-green-600 font-semibold">{{ rentalbooking?.id }}</span>
+            <strong>Booking ID</strong><br>
+            <span class="text-green-600 font-semibold">{{ booking.id }}</span>
           </p>
 
           <p>
-            <strong>Pick-up Time</strong><br />
+            <strong>Pick-up Time</strong><br>
             <span class="text-green-600 font-semibold">
-              {{ new Date(rentalbooking?.pickUpTime!).toLocaleString() }}
+{{ booking?.pickUpTime ? new Date(booking.pickUpTime).toLocaleString() : '-' }}
             </span>
           </p>
 
           <p>
-            <strong>Pick-up Location</strong><br />
-            <span class="text-green-600 font-semibold">{{ rentalbooking?.pickUpLocation }}</span>
+            <strong>Pick-up Location</strong><br>
+            <span class="text-green-600 font-semibold">{{ booking.pickUpLocation }}</span>
           </p>
 
           <p>
-            <strong>Include Driver?</strong><br />
-            <span>{{ rentalbooking?.includeDriver ? 'Yes' : 'No' }}</span>
+            <strong>Include Driver?</strong><br>
+            <span>{{ booking.includeDriver ? 'Yes' : 'No' }}</span>
           </p>
 
           <p>
-            <strong>Total Price</strong><br />
+            <strong>Total Price</strong><br>
             <span class="text-green-600 font-semibold">
-              Rp {{ rentalbooking?.totalPrice.toLocaleString('id-ID') }}
+              Rp {{ booking.totalPrice.toLocaleString('id-ID') }}
             </span>
           </p>
         </div>
 
-        <!-- RIGHT -->
         <div>
           <p>
-            <strong>Vehicle ID</strong><br />
+            <strong>Vehicle ID</strong><br>
             <span
-              class="text-green-600 font-semibold underline cursor-pointer"
-              @click="router.push(`/vehicles/${rentalbooking?.vehicleId}`)"
+              class="text-blue-700 font-semibold underline cursor-pointer"
+              @click="router.push(`/vehicles/${booking.vehicleId}`)"
             >
-              {{ rentalbooking?.vehicleId }}
+              {{ booking.vehicleId }}
             </span>
           </p>
 
           <p>
-            <strong>Drop-off Time</strong><br />
+            <strong>Drop-off Time</strong><br>
             <span class="text-green-600 font-semibold">
-              {{ new Date(rentalbooking?.dropOffTime!).toLocaleString() }}
+              {{ new Date(booking.dropOffTime).toLocaleString() }}
             </span>
           </p>
 
           <p>
-            <strong>Drop-off Location</strong><br />
-            <span class="text-green-600 font-semibold">{{ rentalbooking?.dropOffLocation }}</span>
+            <strong>Drop-off Location</strong><br>
+            <span class="text-green-600 font-semibold">{{ booking.dropOffLocation }}</span>
           </p>
 
           <p>
-            <strong>Status</strong><br />
-            <span class="text-green-600 font-semibold">{{ rentalbooking?.status }}</span>
+            <strong>Status</strong><br>
+            <span class="text-green-600 font-semibold">{{ booking.status }}</span>
           </p>
         </div>
+
       </div>
 
-      <!-- BOTTOM BUTTONS -->
-      <div class="mt-10 flex flex-col gap-4">
+      <!-- BUTTONS -->
+      <div class="mt-10 flex flex-col gap-3">
         <VButton
-          label="View Add-Ons"
-          color="dark"
-          class="w-full"
-          @click="showAddOnModal = true"
-        />
+          class="w-full bg-gray-800 hover:bg-gray-900 text-white py-2 rounded"
+          @click="showAddOns = true"
+        >
+          View Add-Ons
+        </VButton>
 
         <VButton
-          label="Back"
-          color="secondary"
-          class="w-full"
+          class="w-full bg-gray-400 hover:bg-gray-500 text-white py-2 rounded"
           @click="router.push('/bookings')"
-        />
+        >
+          Back
+        </VButton>
       </div>
+
     </div>
 
-    <!-- MODAL ADD-ONS -->
-    <div
-      v-if="showAddOnModal"
-      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
-      @click.self="showAddOnModal = false"
-    >
-      <div class="bg-white p-6 rounded-xl w-full max-w-xl shadow-lg">
-        <div class="flex justify-between items-center border-b pb-3 mb-3">
-          <h3 class="text-xl font-semibold">Included Add-Ons</h3>
-          <button class="text-gray-500 text-2xl" @click="showAddOnModal = false">&times;</button>
-        </div>
-
-        <ul class="list-disc pl-5 text-gray-700" v-if="rentalbooking?.listOfAddOns?.length">
-          <li v-for="addon in rentalbooking.listOfAddOns" :key="addon.id">
-            {{ addon.name }} – Rp {{ addon.price.toLocaleString('id-ID') }}
-          </li>
-        </ul>
-
-        <p v-else class="text-gray-500 italic">No add-ons included.</p>
-      </div>
+<!-- ADD-ONS MODAL -->
+<div
+  v-if="showAddOns"
+  class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+  @click.self="showAddOns = false"
+>
+  <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
+    
+    <!-- Header -->
+    <div class="flex justify-between items-center border-b pb-3 mb-4">
+      <h3 class="text-xl font-bold">Included Add-Ons</h3>
+      <button @click="showAddOns = false" class="text-gray-500 text-2xl">&times;</button>
     </div>
+
+    <!-- Add-ons List -->
+    <ul v-if="displayedAddOns.length" class="list-disc pl-5 space-y-2 text-gray-700">
+      <li v-for="addon in displayedAddOns" :key="addon!.id">
+        {{ addon!.name }} – 
+        Rp {{ (addon!.price ?? 0).toLocaleString('id-ID') }}
+      </li>
+    </ul>
+
+    <!-- Empty -->
+    <p v-else class="text-gray-500 italic">
+      No add-ons included.
+    </p>
+  </div>
+</div>
+
+
   </main>
 </template>
 
-<style scoped></style>

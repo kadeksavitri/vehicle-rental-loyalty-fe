@@ -1,3 +1,5 @@
+<!-- views/rentalbooking/CreateAddOnRentalBookingView.vue -->
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -15,11 +17,9 @@ const bookingStore = useRentalBookingStore()
 const tempStore = useTempBookingStore()
 const bookingData = tempStore.bookingData
 
-// const bookingData =
-//   (history.state?.bookingData as CreateRentalBookingRequest) ?? null
 
 if (!bookingData) {
-  router.push('/bookings/create')
+  router.push('/bookings/add')
 }
 
 const addons = ref<RentalAddOn[]>([])
@@ -29,21 +29,30 @@ onMounted(async () => {
   addons.value = addOnStore.addOns
 })
 
-const handleSubmit = async (updatedBooking: CreateRentalBookingRequest) => {
-  const newBooking = await bookingStore.createRentalBooking(updatedBooking)
+const handleAddOnsSubmit = async (addOns: string[]) => {
+  const updated: CreateRentalBookingRequest = {
+    ...bookingData!,
+    listOfAddOns: addOns
+  }
 
-  if (newBooking) router.push('/bookings')
+  const newBooking = await bookingStore.createRentalBooking(updated)
+  if (newBooking) {
+    tempStore.clear()
+    router.push('/bookings')
+  }
 }
+
 </script>
 
 <template>
-  <main class="pt-24 pb-20 px-4">
+  <main class="pt-8 pb-20 px-4">
   <VAddOnsForm
-    :booking="bookingData!"
-    :addons="addons"
-    :onSubmit="handleSubmit"
+   :bookingAddOns="bookingData!.listOfAddOns ?? []"
+   :addons="addons"
+   :onSubmit="handleAddOnsSubmit"
     :isEdit="false"
   />
 
   </main>
 </template>
+

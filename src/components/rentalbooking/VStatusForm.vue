@@ -1,113 +1,89 @@
+<!-- components/rentalbooking/VStatusForm.vue -->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.store'
 import type { RentalBooking, UpdateRentalBookingStatusRequest } from '@/interfaces/rentalbooking.interface'
 import VButton from '@/components/common/VButton.vue'
 
-const route = useRoute()
-const router = useRouter()
-const rentalBookingStore = useRentalBookingStore()
+const props = defineProps<{
+  booking: RentalBooking
+}>()
 
-const bookingId = route.params.id as string
-const booking = ref<RentalBooking | null>(null)
+const emit = defineEmits(['success'])
+
+const router = useRouter()
+const store = useRentalBookingStore()
+
 const newStatus = ref('')
 
-const loadBooking = async () => {
-  const data = await rentalBookingStore.getRentalBooking(bookingId)
-  if (!data) {
-    router.replace('/bookings')
-    return
-  }
-  booking.value = data
-}
-
 const saveStatus = async () => {
-  if (!booking.value || !newStatus.value) return
+  if (!newStatus.value) return
 
   const payload: UpdateRentalBookingStatusRequest = {
-    id: booking.value.id,
+    id: props.booking.id,
     newStatus: newStatus.value
   }
 
-  const updated = await rentalBookingStore.updateRentalBookingStatus(payload as any)
+  const updated = await store.updateRentalBookingStatus(payload as any)
 
   if (updated) {
-    router.push('/bookings')
+    emit('success')
   }
 }
 
-onMounted(loadBooking)
 </script>
 
 <template>
-  <main class="w-full min-h-screen bg-gray-100 pt-24 py-10 px-4 flex justify-center">
-    <div class="w-full max-w-xl bg-white shadow-md rounded-xl p-8">
+  <div class="bg-white shadow-lg rounded-xl p-10">
 
-      <h2 class="text-2xl font-bold text-green-600 mb-4">
-        Update Booking Status
-      </h2>
+    <h2 class="text-2xl font-bold text-green-600 mb-2">
+      Update Booking Status
+    </h2>
 
-      <hr class="border-gray-300 mb-6" />
+    <hr class="border-gray-300 mb-6" />
 
-      <div v-if="booking">
-        <!-- Booking ID -->
-        <div class="mb-4">
-          <label class="font-semibold text-gray-700">Booking ID</label>
-          <p class="text-gray-900 mt-1">{{ booking.id }}</p>
-        </div>
-
-        <!-- Current Status -->
-        <div class="mb-4">
-          <label class="font-semibold text-gray-700">Current Status</label>
-          <p class="font-bold text-orange-500 mt-1">{{ booking.status }}</p>
-        </div>
-
-        <!-- Select new status -->
-        <div class="mb-4">
-          <label for="newStatus" class="font-semibold text-gray-700">Select new status:</label>
-          <select
-            id="newStatus"
-            v-model="newStatus"
-            class="mt-2 w-full border border-gray-300 rounded-lg p-2"
-            required
-          >
-            <option value="">-- Select Status --</option>
-
-            <!-- For Upcoming → Ongoing -->
-            <option value="Ongoing" v-if="booking.status === 'Upcoming'">Ongoing</option>
-
-            <!-- For Ongoing → Done -->
-            <option value="Done" v-if="booking.status === 'Ongoing'">Done</option>
-          </select>
-        </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-between mt-6">
-          <VButton
-            label="Back"
-            color="secondary"
-            @click="router.push('/bookings')"
-            class="w-[48%]"
-          />
-
-          <VButton
-            label="Save"
-            color="success"
-            @click="saveStatus"
-            class="w-[48%]"
-          />
-        </div>
-
-      </div>
-
-      <div v-else class="text-center text-gray-500">
-        Loading booking data...
-      </div>
+    <!-- Booking ID -->
+    <div class="mb-4">
+      <label class="font-semibold text-gray-700">Booking ID</label>
+      <p class="text-gray-900 mt-1">{{ props.booking.id }}</p>
     </div>
-  </main>
-</template>
 
-<style scoped>
-/* optional custom styles */
-</style>
+    <!-- Current Status -->
+    <div class="mb-4">
+      <label class="font-semibold text-gray-700">Current Status</label>
+      <p class="font-bold text-orange-500 mt-1">{{ props.booking.status }}</p>
+    </div>
+
+    <!-- New Status -->
+    <div class="mb-4">
+      <label for="newStatus" class="font-semibold text-gray-700">Select new status:</label>
+      <select
+        id="newStatus"
+        v-model="newStatus"
+        class="mt-2 w-full border border-gray-300 rounded-lg p-2"
+        required
+      >
+        <option value="">-- Select Status --</option>
+
+        <option value="Ongoing" v-if="props.booking.status === 'Upcoming'">Ongoing</option>
+
+        <option value="Done" v-if="props.booking.status === 'Ongoing'">Done</option>
+      </select>
+    </div>
+
+    <!-- BUTTONS -->
+    <div class="flex justify-between gap-3 mt-8">
+
+      <VButton
+      
+        label="Save"
+        color="success"
+        class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg w-32"
+        @click="saveStatus"
+      > Save
+      </VButton>
+    </div>
+
+  </div>
+</template>
