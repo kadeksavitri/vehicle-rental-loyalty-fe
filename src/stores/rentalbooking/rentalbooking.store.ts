@@ -165,9 +165,9 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
         async chartRentalBookings(data: { period: string; year: number }) {
         this.loading = true;
         try {
-            const res = await axios.post<CommonResponseInterface<{ label: string; count: number }[]>>(
+            const res = await axios.get<CommonResponseInterface<{ label: string; count: number }[]>>(
             `${baseRentalBookingUrl}/chart`,
-            data
+            { params: data }
             );
             return res.data.data;
         } catch (err) {

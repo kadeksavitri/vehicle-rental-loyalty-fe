@@ -30,26 +30,42 @@ const displayedAddOns = computed(() => {
 })
 const showAddOns = ref(false)
 
-// Fetch booking
 onMounted(async () => {
   const data = await store.getRentalBooking(bookingId)
   if (!data) {
     toast.error('Booking not found')
-    router.replace('/bookings')
+    router.push('/bookings')
   } else {
     booking.value = data
-    // ensure add-on catalog loaded so modal can display full add-on info
     await addOnStore.fetchAddOns()
   }
 })
 
-// Conditions for buttons
 const canUpdateDetails = computed(() => booking.value?.status === 'Upcoming')
 const canUpdateAddOns = computed(() => booking.value?.status === 'Upcoming')
 const canUpdateStatus = computed(
   () => booking.value?.status === 'Upcoming' || booking.value?.status === 'Ongoing'
 )
 const canCancel = computed(() => booking.value?.status === 'Upcoming')
+
+const handleDelete = async () => {
+  if (!booking.value) return
+
+  const confirmed = confirm('Apakah kamu yakin ingin menghapus booking ini?')
+  if (!confirmed) return
+
+  const success = await store.deleteRentalBooking({ id: booking.value.id })
+
+  if (success) {
+    toast.success('Booking deleted successfully')
+    router.push('/bookings')
+  } else {
+    toast.error('Failed to delete booking')
+  }
+  
+}
+
+
 </script>
 
 <template>
@@ -88,7 +104,7 @@ const canCancel = computed(() => booking.value?.status === 'Upcoming')
           <VDeleteBookingButton
             v-if="canCancel"
             :rentalBookingId="booking?.id!"
-            @deleted="router.push('/bookings')"
+            @deleted="handleDelete "
           />
 
 
@@ -179,36 +195,33 @@ const canCancel = computed(() => booking.value?.status === 'Upcoming')
 
     </div>
 
-<!-- ADD-ONS MODAL -->
-<div
-  v-if="showAddOns"
-  class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
-  @click.self="showAddOns = false"
->
-  <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
-    
-    <!-- Header -->
-    <div class="flex justify-between items-center border-b pb-3 mb-4">
-      <h3 class="text-xl font-bold">Included Add-Ons</h3>
-      <button @click="showAddOns = false" class="text-gray-500 text-2xl">&times;</button>
+    <div
+      v-if="showAddOns"
+      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
+      @click.self="showAddOns = false"
+    >
+      <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
+        
+        <!-- Header -->
+        <div class="flex justify-between items-center border-b pb-3 mb-4">
+          <h3 class="text-xl font-bold">Included Add-Ons</h3>
+          <button @click="showAddOns = false" class="text-gray-500 text-2xl">&times;</button>
+        </div>
+
+        <!-- Add-ons List -->
+        <ul v-if="displayedAddOns.length" class="list-disc pl-5 space-y-2 text-gray-700">
+          <li v-for="addon in displayedAddOns" :key="addon!.id">
+            {{ addon!.name }} – 
+            Rp {{ (addon!.price ?? 0).toLocaleString('id-ID') }}
+          </li>
+        </ul>
+
+        <!-- Empty -->
+        <p v-else class="text-gray-500 italic">
+          No add-ons included.
+        </p>
+      </div>
     </div>
-
-    <!-- Add-ons List -->
-    <ul v-if="displayedAddOns.length" class="list-disc pl-5 space-y-2 text-gray-700">
-      <li v-for="addon in displayedAddOns" :key="addon!.id">
-        {{ addon!.name }} – 
-        Rp {{ (addon!.price ?? 0).toLocaleString('id-ID') }}
-      </li>
-    </ul>
-
-    <!-- Empty -->
-    <p v-else class="text-gray-500 italic">
-      No add-ons included.
-    </p>
-  </div>
-</div>
-
-
   </main>
 </template>
 

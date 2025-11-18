@@ -18,7 +18,6 @@ async function loadChart() {
   labels.value = []
   values.value = []
   try {
-    // Use store action which posts JSON body (backend expects @RequestBody)
     const data = await store.chartRentalBookings({ period: period.value, year: year.value })
     const items = data ?? []
     labels.value = items.map((d: any) => d[0])
@@ -50,7 +49,6 @@ watch([period, year], loadChart)
       Rental Booking Dashboard
     </h1>
 
-    <!-- FILTERS -->
     <div class="bg-white rounded-xl shadow-md p-6 flex gap-6 items-center mb-10 w-full max-w-4xl justify-center">
       <div class="flex items-center gap-3">
         <label class="font-semibold">View By:</label>

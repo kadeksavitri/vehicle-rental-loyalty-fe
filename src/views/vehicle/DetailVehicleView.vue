@@ -7,19 +7,15 @@ import VDeleteVehicleButton from '@/components/vehicle/VDeleteVehicleButton.vue'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
 import { toast } from 'vue-sonner'
 
-// setup dasar
 const route = useRoute()
 const router = useRouter()
 const store = useVehicleStore()
 
-// reactive data
 const vehicle = ref<Vehicle | null>(null)
 const loading = ref(true)
 
-// ambil id dari url
 const id = route.params.id as string
 
-// ambil data dari store
 onMounted(async () => {
   const data = await store.getVehicle(id)
   if (data) {
