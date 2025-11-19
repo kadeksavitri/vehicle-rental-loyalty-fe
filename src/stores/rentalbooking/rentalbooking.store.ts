@@ -77,15 +77,21 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
             try {
                 const response = await axios.put<CommonResponseInterface<RentalBooking>>(`${baseRentalBookingUrl}/update-details`,rentalBookingData)
                 if (response.status === 200 || response.status === 201) {
-                    this.rentalBookings.push(response.data.data);
+                    // update existing item in list when present
+                    const updated = response.data.data
+                    const idx = this.rentalBookings.findIndex(b => b.id === updated.id)
+                    if (idx !== -1) this.rentalBookings[idx] = updated
+                    else this.rentalBookings.push(updated)
                     toast.success('Rental booking berhasil diperbarui');
-                    return response.data.data;
+                    return updated;
                 } else if (response.status === 400) {
                     toast.warning('Gagal memperbarui rental booking: Data tidak valid');
                 }
-            } catch (error) {
-                this.error = error instanceof Error ? error.message : 'Unknown error';
-                toast.error(`Error saat memperbarui rental booking: ${this.error}`);
+            } catch (err: any) {
+                // prefer server-provided message
+                const serverMessage = err?.response?.data?.message || (err instanceof Error ? err.message : 'Unknown error')
+                this.error = serverMessage
+                toast.error(`Error saat memperbarui rental booking: ${serverMessage}`);
                 return null;
             } finally {
                 this.loading = false;
@@ -109,8 +115,10 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
                     toast.warning('Gagal memperbarui status: Data tidak valid');
                 }
             } catch (error) {
-                this.error = error instanceof Error ? error.message : 'Unknown error';
-                toast.error(`Error saat memperbarui status  booking: ${this.error}`);
+                const err: any = error
+                const serverMsg = err?.response?.data?.message || (err instanceof Error ? err.message : 'Unknown error')
+                this.error = serverMsg
+                toast.error(`Error saat memperbarui status booking: ${serverMsg}`)
                 return null;
             } finally {
                 this.loading = false;
@@ -131,9 +139,11 @@ export const useRentalBookingStore = defineStore('rentalbooking', {
                     toast.warning('Gagal memperbarui Add Ons: Data tidak valid');
                 }
             } catch (error) {
-                this.error = error instanceof Error ? error.message : 'Unknown error';
-                toast.error(`Error saat memperbarui Add Ons: ${this.error}`);
-                return null;
+                    const err: any = error
+                    const serverMsg = err?.response?.data?.message || (err instanceof Error ? err.message : 'Unknown error')
+                    this.error = serverMsg
+                    toast.error(`Error saat memperbarui Add Ons: ${serverMsg}`)
+                    return null;
             } finally {
                 this.loading = false;
             }

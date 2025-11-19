@@ -11,7 +11,7 @@ import CreateAddOnRentalBookingView from '@/views/rentalbooking/CreateAddOnRenta
 import EditRentalBookingView from '@/views/rentalbooking/EditRentalBookingView.vue'
 import EditAddOnBookingView from '@/views/rentalbooking/EditAddOnBookingView.vue'
 import VStatusForm from '@/components/rentalbooking/VStatusForm.vue'
-import VEditStatusBookingView from '@/views/rentalbooking/VEditStatusBookingView.vue'
+import EditStatusBookingView from '@/views/rentalbooking/EditStatusBookingView.vue'
 import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
 console.log("VITE_API_URL =", import.meta.env.VITE_API_URL)
 
@@ -76,7 +76,7 @@ const router = createRouter({
 {
   path: '/bookings/:id/update-status',
   name: 'update-status',
-  component: VEditStatusBookingView
+  component:EditStatusBookingView
 },
 
 {

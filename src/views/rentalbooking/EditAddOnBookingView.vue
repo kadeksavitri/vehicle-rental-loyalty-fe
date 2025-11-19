@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { normalizeAddOnIds } from '@/utils/addon-normalizer'
 import { useRoute, useRouter } from 'vue-router'
 import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.store'
 import type { RentalBooking, RentalAddOn, UpdateRentalBookingAddOnRequest } from '@/interfaces/rentalbooking.interface'
@@ -35,6 +36,9 @@ onMounted(async () => {
   // fetch add-ons from store
   await addOnStore.fetchAddOns()
   addOns.value = addOnStore.addOns
+
+  // prepare booking add-on ids (backend returns add-ons as names)
+  bookingAddOnIds.value = normalizeAddOnIds(booking.value?.listOfAddOns ?? [], addOnStore.addOns)
 })
 
 // FIXED — terima CreateRentalBookingRequest dari VAddOnsForm
@@ -53,6 +57,8 @@ onMounted(async () => {
 //   }
 // }
 
+
+const bookingAddOnIds = ref<string[]>([])
 
 const handleUpdate = async (updatedAddOns: string[]) => {
 
@@ -76,7 +82,7 @@ const handleUpdate = async (updatedAddOns: string[]) => {
     <div class="w-full max-w-3xl">
 
         <VAddOnsForm
-          :bookingAddOns="(booking?.listOfAddOns ?? []).map(a => (typeof a === 'string' ? a : (a as any).id))"
+          :bookingAddOns="bookingAddOnIds"
           :addons="addOns"
           :onSubmit="handleUpdate"
           :isEdit="true"

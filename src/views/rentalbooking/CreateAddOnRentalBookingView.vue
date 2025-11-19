@@ -1,7 +1,8 @@
 <!-- views/rentalbooking/CreateAddOnRentalBookingView.vue -->
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { normalizeAddOnIds } from '@/utils/addon-normalizer'
 import { useRouter } from 'vue-router'
 import VAddOnsForm from '@/components/rentalbooking/VAddOnsForm.vue'
 import { useAddOnStore } from '@/stores/additional/addon.store'
@@ -23,6 +24,8 @@ if (!bookingData) {
 }
 
 const addons = ref<RentalAddOn[]>([])
+
+const bookingAddOnIds = computed(() => normalizeAddOnIds(bookingData?.listOfAddOns ?? [], addons.value))
 
 onMounted(async () => {
   await addOnStore.fetchAddOns()
@@ -47,7 +50,7 @@ const handleAddOnsSubmit = async (addOns: string[]) => {
 <template>
   <main class="pt-8 pb-20 px-4">
   <VAddOnsForm
-   :bookingAddOns="bookingData!.listOfAddOns ?? []"
+   :bookingAddOns="bookingAddOnIds"
    :addons="addons"
    :onSubmit="handleAddOnsSubmit"
     :isEdit="false"

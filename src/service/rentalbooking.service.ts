@@ -1,12 +1,10 @@
 import type {  CreateRentalBookingRequest, DeleteRentalBookingRequest, RentalAddOn, RentalBooking, RentalBookingRequest, UpdateRentalBookingAddOnRequest, UpdateRentalBookingRequest, UpdateRentalBookingStatusRequest, ChartRentalBookingRequest } from '@/interfaces/rentalbooking.interface';
 import { calculateDays, calculateBasePrice, calculateDriverFee, calculateAddOnTotal, previewVehiclePrice as calcPreview } from '@/service/booking-calculator'
+import { v4 as uuidv4 } from 'uuid';
 
 const rentalBookings: RentalBooking[] = [];
 
 const rentalAddOns: RentalAddOn[] = [
-  { id: 'A1', name: 'Baby Seat', price: 50000 },
-  { id: 'A2', name: 'Unlimited Wi-Fi', price: 75000 },
-  { id: 'A3', name: 'Additional Insurance', price: 100000 },
 ]
 
 function generateRentalBookingId(): string {

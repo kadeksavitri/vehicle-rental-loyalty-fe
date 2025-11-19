@@ -26,7 +26,16 @@ const props = defineProps({
   }
 })
 
-const model = ref({ ...props.bookingModel })
+const model = ref(props.bookingModel)
+
+watch(
+  () => props.bookingModel,
+  (newVal) => {
+    model.value = newVal
+  },
+  { deep: true }
+)
+watch(model, (v) => emit('update:modelValue', v), { deep: true })
 
 // nver use
 const showResults = ref<boolean>(false)
@@ -60,7 +69,7 @@ const transmissionOptions = [
 <template>
   <form
     @submit.prevent="handleSubmit"
-    class="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto flex flex-col gap-4 font-sans"
+    class="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto flex flex-col gap-4 font-sans border-1 border-gray-200"
   >
     <h2 class="text-xl font-bold text-[#1aa546] mb-4">
       {{ props.isEdit ? 'Update Rental Booking' : 'Create a New Rental Booking' }}
@@ -142,11 +151,8 @@ const transmissionOptions = [
         type="submit"
         class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg w-32"
       >
-        {{ isEdit ? 'Save Changes' : 'Search for Vehicles' }}
+        Search for Vehicles
       </VButton>
     </div>
-
-
-
   </form>
 </template>

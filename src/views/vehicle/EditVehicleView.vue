@@ -53,6 +53,22 @@ onMounted(async () => {
 const vendors = computed(() => vendorStore.vendors)
 
 const handleUpdate = async (updated: UpdateVehicleRequest) => {
+  const currentYear = new Date().getFullYear()
+  if (updated.productionYear > currentYear) {
+    toast.error('Tahun produksi tidak boleh lebih dari tahun saat ini')
+    return
+  }
+
+  // check license plate uniqueness (exclude current vehicle)
+  if (vehicleStore.vehicles.length === 0) {
+    await vehicleStore.fetchVehicles()
+  }
+  const conflict = vehicleStore.vehicles.find(v => v.licensePlate === updated.licensePlate && v.id !== updated.id)
+  if (conflict) {
+    toast.error('License plate key constraint tidak unik')
+    return
+  }
+
   const success = await vehicleStore.updateVehicle(updated)
 
   if (success) {

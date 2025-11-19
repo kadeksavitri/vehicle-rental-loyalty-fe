@@ -10,6 +10,7 @@ import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.stor
 import { useAddOnStore } from '@/stores/additional/addon.store'
 import { calculateAddOnTotal } from '@/service/booking-calculator'
 import { rentalBookingService } from '@/service/rentalbooking.service'
+import { previewVehiclePrice, calculateDays } from '@/service/booking-calculator'
 import type { CreateRentalBookingRequest, UpdateRentalBookingRequest, RentalBooking, RentalAddOn } from '@/interfaces/rentalbooking.interface'
 
 const router = useRouter()
@@ -21,8 +22,8 @@ const locationStore = useLocationStore()
 const bookingStore = useRentalBookingStore()
 const addOnStore = useAddOnStore()
 
-// model booking (reuse create model shape)
-const model = ref<UpdateRentalBookingRequest>({
+// booking booking (reuse create booking shape)
+const booking = ref<UpdateRentalBookingRequest>({
   id: bookingId,
   vehicleId: '',
   pickUpLocation: '',
@@ -43,8 +44,9 @@ const originalBooking = ref<RentalBooking | null>(null)
 const availableVehicles = ref<any[]>([])
 const selectedVehicle = ref<any | null>(null)
 const days = ref<number>(1)
-const showVehicleList = ref(false)
-const showPriceDetails = ref(false)
+const showResults = ref(false)
+const summary = ref<any | null>(null)
+
 const locations = ref<string[]>([])
 const addons = ref<RentalAddOn[]>([])
 
@@ -70,178 +72,203 @@ onMounted(async () => {
 
   originalBooking.value = data
 
-  // prefill model
-  model.value.vehicleId = data.vehicleId
-  model.value.pickUpLocation = data.pickUpLocation
-  model.value.dropOffLocation = data.dropOffLocation
-  model.value.pickUpTime = data.pickUpTime as unknown as string
-  model.value.dropOffTime = data.dropOffTime as unknown as string
-  model.value.capacityNeeded = data.capacityNeeded
-  model.value.transmissionNeeded = data.transmissionNeeded
-  model.value.includeDriver = data.includeDriver
-  model.value.listOfAddOns = (data.listOfAddOns ?? []).map(a => (a as any).id)
+  // prefill booking
+  booking.value.vehicleId = data.vehicleId
+  booking.value.pickUpLocation = data.pickUpLocation
+  booking.value.dropOffLocation = data.dropOffLocation
+  booking.value.pickUpTime = data.pickUpTime as unknown as string
+  booking.value.dropOffTime = data.dropOffTime as unknown as string
+  booking.value.capacityNeeded = data.capacityNeeded
+  booking.value.transmissionNeeded = data.transmissionNeeded
+  booking.value.includeDriver = data.includeDriver
+
+  // backend returns add-ons as names (RentalBookingResponseDTO.listOfAddOns = List<String> names)
+  // map those names back to add-on IDs using the add-on catalog we just fetched
+  const mappedAddOnIds = (data.listOfAddOns ?? []).map((item: any) => {
+    if (!item) return null
+    const str = String(item)
+    // try find by id first, then by name
+    const found = addons.value.find(a => a.id === str) || addons.value.find(a => a.name === str)
+    return found ? found.id : null
+  }).filter(Boolean) as string[]
+
+  booking.value.listOfAddOns = mappedAddOnIds
 
   // fetch vehicle to get daily price
   const v = await vehicleStore.getVehicle(data.vehicleId)
   if (v) {
-    model.value.vehicleDailyPrice = v.price
+    booking.value.vehicleDailyPrice = v.price
     selectedVehicle.value = v
   }
-
-  // compute initial summary using centralized service
-  const initialPreview = rentalBookingService.previewVehiclePrice(
-    model.value.vehicleDailyPrice,
-    model.value.pickUpTime,
-    model.value.dropOffTime,
-    model.value.includeDriver
-  )
-  const initialAddOnIds = (model.value.listOfAddOns ?? [])
-  const initialAddOnTotal = calculateAddOnTotal(initialAddOnIds, addons.value)
-  days.value = initialPreview.days
-  model.value.totalPrice = initialPreview.grandTotal + initialAddOnTotal
-  showPriceDetails.value = true
 })
 
-// search vehicles for given model criteria
-const searchVehicles = async (b: CreateRentalBookingRequest) => {
-  selectedVehicle.value = null
-  showPriceDetails.value = false
-
-  // compute days using centralized service (preview with 0 price to get days)
-  const dayPreview = rentalBookingService.previewVehiclePrice(0, b.pickUpTime, b.dropOffTime, false)
-  days.value = dayPreview.days
-
+// search vehicles for given booking criteria
+const searchVehicles = async () => {
   const allVehicles = (await vehicleStore.fetchVehicles()) ?? []
+
+  // calculate days for the requested period
+  const days = calculateDays(booking.value.pickUpTime, booking.value.dropOffTime)
+
   availableVehicles.value = allVehicles
     .filter(v =>
-      v.capacity >= b.capacityNeeded &&
-      v.transmission.toLowerCase() === b.transmissionNeeded.toLowerCase() &&
+      v.capacity >= booking.value.capacityNeeded &&
+      v.transmission.toLowerCase() === booking.value.transmissionNeeded.toLowerCase() &&
       v.status === 'Available' &&
-      v.location === b.pickUpLocation
+      v.location === booking.value.pickUpLocation
     )
-    .map(v => {
-      const preview = rentalBookingService.previewVehiclePrice(v.price, b.pickUpTime, b.dropOffTime, b.includeDriver)
-      return { ...v, calculatedPrice: preview.grandTotal }
-    })
+    .map(v => ({
+      ...v,
+      calculatedPrice: v.price * days
+    }))
 
-  showVehicleList.value = true
+  selectedVehicle.value = null
+  summary.value = null
+  showResults.value = true
 }
 
 const selectVehicle = (v: any) => {
   selectedVehicle.value = v
-  model.value.vehicleId = v.id
-  model.value.vehicleDailyPrice = v.price
+  booking.value.vehicleId = v.id
+  booking.value.vehicleDailyPrice = v.price
 
-  const preview = rentalBookingService.previewVehiclePrice(
-    v.price,
-    model.value.pickUpTime,
-    model.value.dropOffTime,
-    model.value.includeDriver
-  )
-  // include any selected add-ons in the total
-  const addOnIds = model.value.listOfAddOns ?? []
-  const addOnTotal = calculateAddOnTotal(addOnIds, addons.value)
-  model.value.totalPrice = preview.grandTotal + addOnTotal
-  days.value = preview.days
-  showPriceDetails.value = true
+  const preview = previewVehiclePrice(v.price, booking.value.pickUpTime, booking.value.dropOffTime, booking.value.includeDriver)
+  summary.value = preview
+  booking.value.totalPrice = preview.grandTotal
 }
 
 const cancel = () => router.push(`/bookings/${bookingId}`)
 
 const saveBooking = async () => {
   if (!originalBooking.value) return
-  // ensure add-ons are preserved if user did not change them
-  const preservedAddOnIds = (model.value.listOfAddOns && model.value.listOfAddOns.length > 0)
-    ? model.value.listOfAddOns
+  // Basic client-side validation to avoid sending malformed payloads
+  if (!booking.value.vehicleId || booking.value.vehicleId.trim() === '') {
+    toast.error('Silakan pilih kendaraan sebelum menyimpan booking.')
+    return
+  }
+  if (!booking.value.pickUpTime || !booking.value.dropOffTime) {
+    toast.error('Waktu pengambilan dan pengembalian harus diisi.')
+    return
+  }
+  if (!booking.value.pickUpLocation || !booking.value.dropOffLocation) {
+    toast.error('Lokasi pengambilan dan pengembalian harus dipilih.')
+    return
+  }
+  // additional constraints: pickup >= now, pickup < drop
+  const now = new Date()
+  const pick = new Date(booking.value.pickUpTime)
+  const drop = new Date(booking.value.dropOffTime)
+  if (isNaN(pick.getTime()) || isNaN(drop.getTime())) {
+    toast.error('Format waktu tidak valid')
+    return
+  }
+  if (pick.getTime() < now.getTime()) {
+    toast.error('waktu pengambilan minimal harus waktu saat ini atau lebih')
+    return
+  }
+  if (pick.getTime() >= drop.getTime()) {
+    toast.error('waktu pengambilan harus sebelum waktu pengembalian')
+    return
+  }
+  const preservedAddOnIds = (booking.value.listOfAddOns && booking.value.listOfAddOns.length > 0)
+    ? booking.value.listOfAddOns
     : (originalBooking.value.listOfAddOns ?? []).map(a => (typeof a === 'string' ? a : (a as any).id))
 
-  // compute totals using centralized service + add-on totals
   const preview = rentalBookingService.previewVehiclePrice(
-    model.value.vehicleDailyPrice,
-    model.value.pickUpTime as unknown as string,
-    model.value.dropOffTime as unknown as string,
-    model.value.includeDriver
+    booking.value.vehicleDailyPrice,
+    booking.value.pickUpTime as unknown as string,
+    booking.value.dropOffTime as unknown as string,
+    booking.value.includeDriver
   )
   const addOnTotal = calculateAddOnTotal(preservedAddOnIds, addons.value)
 
   const payload: UpdateRentalBookingRequest = {
     id: bookingId,
-    vehicleId: model.value.vehicleId,
-    pickUpTime: model.value.pickUpTime as unknown as string,
-    dropOffTime: model.value.dropOffTime as unknown as string,
-    pickUpLocation: model.value.pickUpLocation,
-    dropOffLocation: model.value.dropOffLocation,
-    capacityNeeded: model.value.capacityNeeded,
-    transmissionNeeded: model.value.transmissionNeeded,
+    vehicleId: booking.value.vehicleId,
+    pickUpTime: booking.value.pickUpTime as unknown as string,
+    dropOffTime: booking.value.dropOffTime as unknown as string,
+    pickUpLocation: booking.value.pickUpLocation,
+    dropOffLocation: booking.value.dropOffLocation,
+    capacityNeeded: booking.value.capacityNeeded,
+    transmissionNeeded: booking.value.transmissionNeeded,
     totalPrice: preview.grandTotal + addOnTotal,
     listOfAddOns: preservedAddOnIds ?? [],
-    includeDriver: model.value.includeDriver,
+    includeDriver: booking.value.includeDriver,
     status: originalBooking.value.status,
-    vehicleDailyPrice: model.value.vehicleDailyPrice,
+    vehicleDailyPrice: booking.value.vehicleDailyPrice,
   }
 
-  const res = await bookingStore.updateRentalBooking(payload as any)
-  if (res) {
-    toast.success('Booking updated successfully')
-    router.push(`/bookings/${bookingId}`)
+  try {
+    const res = await bookingStore.updateRentalBooking(payload as any)
+    if (res) {
+      toast.success('Booking updated successfully')
+      router.push(`/bookings/${bookingId}`)
+    } else {
+      // store already shows toast for server message; ensure we don't silently fail
+      toast.error('Failed to update booking. See console for details.')
+    }
+  } catch (err: any) {
+    const msg = err?.message ?? 'Unexpected error'
+    toast.error(`Error updating booking: ${msg}`)
+    console.error('Save booking error:', err)
   }
 }
 </script>
 
 <template>
-  <main class="w-full min-h-screen bg-gray-100 pt-24 pb-20 px-4">
+  <main class="pt-8 pb-20 px-4">
     <div class="max-w-3xl mx-auto">
 
       <VBookingForm
         :action="searchVehicles"
-        :bookingModel="model"
+        :bookingModel="booking"
         :availableLocations="locations"
-        :isEdit="false"
-        @update:modelValue="model = $event"
+        :isEdit="true"
+        @update:modelValue="booking = $event"
       />
 
       <!-- Vehicle List -->
-      <div v-if="showVehicleList" class="mt-10 bg-white p-6 shadow-md rounded-xl">
-        <h3 class="text-xl font-bold text-[#1aa546] mb-4">
-          Available Vehicles ({{ days }} day{{ days > 1 ? 's' : '' }})
+      <div v-if="showResults" class="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto flex flex-col gap-4 font-sans -mt-8">
+        <h3 class="text-xl font-bold text-[#1aa546] mb-3">
+          Available Vehicles 
         </h3>
 
         <div
           v-for="v in availableVehicles"
           :key="v.id"
+          class="p-4 border rounded-lg mb-3 cursor-pointer border-gray-300"
+          :class="selectedVehicle?.id === v.id ? 'bg-green-200 border-green-600' : 'hover:bg-green-50'"
           @click="selectVehicle(v)"
-          class="border rounded-lg p-4 mb-4 cursor-pointer hover:bg-green-100 transition"
         >
-          <p class="font-semibold">{{ v.brand }} {{ v.model }} ({{ v.type }})</p>
-          <p class="mt-1 text-gray-700">
+          <p class="font-semibold">{{ v.brand }} {{ v.booking }} ({{ v.type }})</p>
+          <p class="mt-1 text-gray-600">
             Total Price:
-            <b class="text-[#1aa546]">Rp {{ v.calculatedPrice.toLocaleString() }}</b>
+            <b class="text-[#1aa546]">Rp {{ v.calculatedPrice.toLocaleString('id-ID') }}</b>
           </p>
         </div>
 
         <div v-if="availableVehicles.length === 0" class="text-center text-gray-500">
           No matching vehicles.
         </div>
-      </div>
+    
 
-      <!-- Price Details + Save -->
-      <div v-if="showPriceDetails" class="mt-8 bg-white p-6 rounded-xl shadow-md">
+      <div v-if="summary" class = "-mt-2">
+      <div class="mt-6 border rounded-xl p-5">
         <h3 class="text-lg font-bold text-[#1aa546] mb-2">Booking Price Details</h3>
 
-        <p class="text-gray-700 mb-1">
-          Price per Day ({{ days }} days):
-          <b class="float-right">Rp {{ (selectedVehicle?.calculatedPrice ?? (model.vehicleDailyPrice * days)).toLocaleString() }}</b>
+        <p>
+          Price per Day ({{ summary.days }} day{{ summary.days > 1 ? '(s)' : '' }}):
+          <b class="float-right">Rp {{  summary.basePrice.toLocaleString('id-ID')}}</b>
         </p>
 
-        <p class="text-gray-700 mb-1" v-if="model.includeDriver">
+        <p v-if="booking.includeDriver" class="mt-2">
           Driver Fee:
-          <b class="float-right">Rp {{ (100000 * days).toLocaleString() }}</b>
+          <b class="float-right">Rp {{ summary.driverFee.toLocaleString('id-ID') }}</b>
         </p>
 
         <div class="border-t mt-2 pt-2 text-xl font-bold text-[#1aa546]">
           Grand Total:
-          <span class="float-right">
-            Rp {{ model.totalPrice.toLocaleString() }}
+          <span class="float-right text-lg  text-[#1aa546] font-bold">
+            Rp {{ summary.grandTotal.toLocaleString('id-ID')}}
           </span>
         </div>
 
@@ -250,7 +277,8 @@ const saveBooking = async () => {
           <VButton class="w-full bg-[#1aa546] text-white" @click="saveBooking">Save</VButton>
         </div>
       </div>
-
+      </div>
+      </div>
     </div>
   </main>
 </template>

@@ -23,9 +23,16 @@ const displayedAddOns = computed(() => {
   const catalog = addOnStore.addOns ?? []
   return (booking.value.listOfAddOns ?? []).map(a => {
     if (!a) return null
-    return typeof a === 'string'
-      ? (catalog.find(x => x.id === a) ?? { id: a, name: a, price: 0 })
-      : a
+    // booking.listOfAddOns from backend is a list of add-on names (strings)
+    if (typeof a === 'string') {
+      // try find by id first, then by name
+      const byId = catalog.find(x => x.id === a)
+      if (byId) return byId
+      const byName = catalog.find(x => x.name === a)
+      if (byName) return byName
+      return { id: a, name: a, price: 0 }
+    }
+    return a
   }).filter(Boolean)
 })
 const showAddOns = ref(false)

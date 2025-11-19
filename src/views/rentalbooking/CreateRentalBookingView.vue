@@ -2,9 +2,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { toast } from 'vue-sonner'
 import { useRouter } from 'vue-router'
 import { useVehicleStore } from '@/stores/vehicle/vehicle.store'
 import { useLocationStore } from '@/stores/additional/location.store'
+import { useVendorStore } from '@/stores/additional/vendor.store'
 import { useTempBookingStore } from '@/stores/rentalbooking/booking-temp.store'
 import VBookingForm from '@/components/rentalbooking/VBookingForm.vue'
 import VButton from '@/components/common/VButton.vue'
@@ -15,9 +17,9 @@ import type { CreateRentalBookingRequest } from '@/interfaces/rentalbooking.inte
 const router = useRouter()
 const vehicleStore = useVehicleStore()
 const locationStore = useLocationStore()
+const vendorStore = useVendorStore()
 const tempStore = useTempBookingStore()
 
-// ==== INITIAL BOOKING MODEL ====
 const booking = ref<CreateRentalBookingRequest>({
   pickUpLocation: '',
   dropOffLocation: '',
@@ -41,22 +43,66 @@ const showResults = ref(false)
 onMounted(async () => {
   await locationStore.fetchLocations()
   locations.value = locationStore.locations
+  await vendorStore.fetchVendors()
 })
 
 // ====================
+const validateSearchInputs = (): boolean => {
+  const now = new Date()
+  if (!booking.value.pickUpTime || !booking.value.dropOffTime) {
+    toast.error('Waktu pengambilan dan pengembalian harus diisi')
+    return false
+  }
+  const pick = new Date(booking.value.pickUpTime)
+  const drop = new Date(booking.value.dropOffTime)
+  if (isNaN(pick.getTime()) || isNaN(drop.getTime())) {
+    toast.error('Format waktu tidak valid')
+    return false
+  }
+  if (pick.getTime() < now.getTime()) {
+    toast.error('waktu pengambilan minimal harus waktu saat ini atau lebih')
+    return false
+  }
+  if (pick.getTime() >= drop.getTime()) {
+    toast.error('waktu pengambilan harus sebelum waktu pengembalian')
+    return false
+  }
+  if (!booking.value.transmissionNeeded || booking.value.transmissionNeeded.trim() === '') {
+    toast.error('Jenis transmisi harus dipilih')
+    return false
+  }
+  if (!booking.value.pickUpLocation || !booking.value.dropOffLocation) {
+    toast.error('Lokasi pengambilan dan pengembalian harus dipilih')
+    return false
+  }
+  if (!booking.value.capacityNeeded || booking.value.capacityNeeded < 1) {
+    toast.error('Kapasitas minimal adalah 1')
+    return false
+  }
+  return true
+}
+
 const searchVehicles = async () => {
+  if (!validateSearchInputs()) return
+
   const allVehicles = (await vehicleStore.fetchVehicles()) ?? []
 
   // calculate days for the requested period
   const days = calculateDays(booking.value.pickUpTime, booking.value.dropOffTime)
 
   availableVehicles.value = allVehicles
-    .filter(v =>
-      v.capacity >= booking.value.capacityNeeded &&
-      v.transmission.toLowerCase() === booking.value.transmissionNeeded.toLowerCase() &&
-      v.status === 'Available' &&
-      v.location === booking.value.pickUpLocation
-    )
+    .filter(v => {
+      const vendor = vendorStore.vendors.find(x => x.id === v.rentalVendorId)
+      const vendorHasLocations = vendor && Array.isArray(vendor.listOfLocations) && vendor.listOfLocations.includes(booking.value.pickUpLocation) && vendor.listOfLocations.includes(booking.value.dropOffLocation)
+      return (
+        v.capacity >= booking.value.capacityNeeded &&
+        v.transmission.toLowerCase() === booking.value.transmissionNeeded.toLowerCase() &&
+        v.status === 'Available' &&
+        // vehicle location must match pickup location AND vendor must operate in both pickup and dropoff
+        v.location === booking.value.pickUpLocation &&
+        !!vendorHasLocations
+      )
+    })
     .map(v => ({
       ...v,
       calculatedPrice: v.price * days
@@ -78,6 +124,10 @@ const selectVehicle = (v: any) => {
 }
 
 const proceedToAddOns = () => {
+  if (!selectedVehicle.value) {
+    toast.error('Pilih kendaraan terlebih dahulu sebelum melanjutkan')
+    return
+  }
   tempStore.setBooking(booking.value)
   tempStore.setSelectedVehicle(selectedVehicle.value)
   // navigate to the add-ons step route
@@ -121,31 +171,38 @@ watch(() => booking.value.includeDriver, (newVal) => {
         >
           <p class="font-semibold">{{ v.brand }} {{ v.model }} ({{ v.type }})</p>
           <p class="mt-1 text-gray-600">
-            Price per day:
-            <b>{{ v.price.toLocaleString('id-ID') }}</b>
+            Total Price:
+              <b class="text-[#1aa546]">Rp {{ v.calculatedPrice.toLocaleString('id-ID') }}</b>
           </p>
         </div>
 
-        <div v-if="summary" class="mt-6 border rounded-xl p-5">
-          <h3 class="text-lg font-bold text-[#1aa546] mb-2">Booking Summary</h3>
+        <div v-if="availableVehicles.length === 0" class="text-center text-gray-500">
+          No vehicles available for the requested period
+        </div>
+
+      <div v-if= "summary" class=" -mt-2">
+        <div class="mt-6 border rounded-xl p-5">
+          <h3 class="text-lg font-bold text-[#1aa546] mb-2">Booking Price Details</h3>
 
           <p>
-            Base Price:
-            <b class="float-right">{{ summary.basePrice.toLocaleString('id-ID') }}</b>
+            Price per Day ({{ summary.days }} day{{ summary.days > 1 ? '(s)' : '' }}):
+            <b class="float-right">Rp {{ summary.basePrice.toLocaleString('id-ID') }}</b>
           </p>
 
           <p v-if="booking.includeDriver" class="mt-2">
             Driver Fee:
-            <b class="float-right">{{ summary.driverFee.toLocaleString('id-ID') }}</b>
+            <b class="float-right">Rp {{ summary.driverFee.toLocaleString('id-ID') }}</b>
           </p>
 
-          <div class="border-t mt-3 pt-3 text-xl font-bold">
-            Total:
-            <span class="float-right">{{ summary.grandTotal.toLocaleString('id-ID') }}</span>
+          <div class="border-t mt-3 pt-3 text-lg font-bold">
+            Grand Total:
+            <span class="float-right text-lg  text-[#1aa546] font-bold">Rp {{ summary.grandTotal.toLocaleString('id-ID') }}</span>
           </div>
 
+        </div>
+
           <VButton
-            class="w-full bg-blue-600 hover:bg-blue-700 mt-5"
+            class="w-full text-white bg-blue-600 hover:bg-blue-700 mt-5"
             @click="proceedToAddOns"
           >
             Proceed to Add-ons

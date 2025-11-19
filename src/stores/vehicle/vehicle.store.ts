@@ -65,8 +65,15 @@ export const useVehicleStore = defineStore('vehicle', {
                 toast.warning('Gagal membuat kendaraan: Data tidak valid');
             }
         } catch (error) {
-            this.error = error instanceof Error ? error.message : 'Unknown error';
-            toast.error(`Error saat membuat kendaraan: ${this.error}`);
+            // try to surface server message if present
+            const err: any = error
+            const serverMsg = err?.response?.data?.message || err?.message || 'Unknown error'
+            this.error = serverMsg
+            if (err?.response?.status === 409 || /unique|constraint|license/i.test(serverMsg)) {
+                toast.error('License plate key constraint tidak unik')
+            } else {
+                toast.error(`Error saat membuat kendaraan: ${serverMsg}`)
+            }
             return null;
         } finally {
             this.loading = false;
@@ -98,8 +105,15 @@ async updateVehicle(vehicleData: UpdateVehicleRequest) {
     return false;
 
   } catch (error) {
-    this.error = error instanceof Error ? error.message : 'Unknown error';
-    toast.error(`Error saat memperbarui kendaraan: ${this.error}`);
+        const err: any = error
+        const serverMsg = err?.response?.data?.message || err?.message || 'Unknown error'
+        this.error = serverMsg
+        if (err?.response?.status === 409 || /unique|constraint|license/i.test(serverMsg)) {
+            toast.error('License plate key constraint tidak unik')
+        } else {
+            // surface server-side validation / status errors (e.g., cannot change status)
+            toast.error(`Error saat memperbarui kendaraan: ${serverMsg}`)
+        }
     return false;
   } finally {
     this.loading = false;
