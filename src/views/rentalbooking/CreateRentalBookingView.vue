@@ -134,7 +134,6 @@ const proceedToAddOns = () => {
   router.push({ name: 'CreateBookingAddOns' })
 }
 
-// keep booking total in sync when includeDriver is toggled after selection
 watch(() => booking.value.includeDriver, (newVal) => {
   if (!selectedVehicle.value || !summary.value) return
   const days = summary.value.days || 1
