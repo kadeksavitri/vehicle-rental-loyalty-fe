@@ -87,7 +87,7 @@ const columns: ColumnDef<RentalBooking>[] = [
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
     <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Booking List</h1>
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+    <div class="max-w-6xl mx-auto bg-white shadow-lg ring-1 ring-gray-200/70 rounded-2xl p-6">
 
       <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
         <div class="flex gap-2">

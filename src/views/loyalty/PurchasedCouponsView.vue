@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
+import { useAuthStore } from '@/stores/auth/auth.store'
 import VDataTable from '@/components/common/VDataTable.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 
 const store = useLoyaltyStore()
-const customerId = 'CURRENT_CUSTOMER_ID'
+const auth = useAuthStore()
+const customerId = auth.user?.id ?? ''
 
 onMounted(() => store.fetchPurchasedCoupons(customerId))
 

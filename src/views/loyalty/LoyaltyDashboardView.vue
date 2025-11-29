@@ -2,9 +2,11 @@
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import VButton from '@/components/common/VButton.vue'
+import { useAuthStore } from '@/stores/auth/auth.store'
 
 const store = useLoyaltyStore()
-const customerId = 'CURRENT_CUSTOMER_ID' // nanti ganti dari auth
+const auth = useAuthStore()
+const customerId = auth.user?.id ?? ''
 
 onMounted(() => {
   store.fetchPoints(customerId)
@@ -23,7 +25,7 @@ onMounted(() => {
     </div>
 
     <div class="mt-8 grid grid-cols-2 gap-4">
-      <router-link to="/loyalty/coupons">
+      <router-link to="/loyalty/available">
         <VButton class="bg-[#1aa546] text-white">Available Coupons</VButton>
       </router-link>
       <router-link to="/loyalty/purchased">

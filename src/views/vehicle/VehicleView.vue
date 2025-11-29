@@ -14,7 +14,6 @@ const filterType = ref('All')
 
 const VEHICLE_TYPES = ['All', 'SUV', 'MPV', 'Sedan', 'Luxury']
 
-// ambil data saat mount
 onMounted(async () => {
   await vehicleStore.fetchVehicles()
 })
@@ -37,7 +36,6 @@ const filteredVehicles = computed(() => {
   })
 })
 
-// definisi kolom DataTable
 const columns: ColumnDef<Vehicle>[] = [
   {
     header: 'No',
@@ -86,7 +84,7 @@ const columns: ColumnDef<Vehicle>[] = [
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
     <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Vehicle List</h1>
-    <div class="max-w-6xl mx-auto bg-white rounded-xl shadow p-6">
+    <div class="max-w-6xl mx-auto bg-white shadow-lg ring-1 ring-gray-200/70 rounded-2xl  p-6">
 
       <!-- Button Row -->
       <div class="flex flex-wrap justify-between items-center mb-5 gap-3">

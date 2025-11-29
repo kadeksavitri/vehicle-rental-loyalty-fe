@@ -66,7 +66,7 @@ const handleCreate = async (data: VehicleRequest) => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 p-6 font-sans">
+  <div class="min-h-screen bg-gray-50 p-6 font-sans ">
 
       <VVehicleForm
         :vehicleModel="newVehicle"

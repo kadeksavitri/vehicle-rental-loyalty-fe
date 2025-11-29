@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
+import { useAuthStore } from '@/stores/auth/auth.store'
 import VButton from '@/components/common/VButton.vue'
 import VDataTable from '@/components/common/VDataTable.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 
 const store = useLoyaltyStore()
-const customerId = 'CURRENT_CUSTOMER_ID'
+const auth = useAuthStore()
+const customerId = auth.user?.id ?? ''
 
 onMounted(() => store.fetchAllCoupons())
 
@@ -21,7 +23,7 @@ const columns: ColumnDef<any>[] = [
       row
     })
   }
-}
+]
 
 const buy = (id: string) => store.purchaseCoupon(customerId, id)
 </script>
