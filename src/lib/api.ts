@@ -7,6 +7,7 @@ const apiClient = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-API-KEY': import.meta.env.VITE_API_KEY, 
   },
 })
 
@@ -16,6 +17,9 @@ apiClient.interceptors.request.use(
     const token = getAuthToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+    }
+    if (!config.headers['X-API-KEY']) {
+      config.headers['X-API-KEY'] = import.meta.env.VITE_API_KEY
     }
     return config
   },

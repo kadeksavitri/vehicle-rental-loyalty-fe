@@ -1,15 +1,13 @@
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import apiClient from '@/lib/api'
 import { toast } from 'vue-sonner'
 import type { RentalAddOn } from '@/interfaces/addon.interface'
-
-const baseUrl = import.meta.env.VITE_API_URL + '/addons'
 
 export const useAddOnStore = defineStore('addon', {
   state: () => ({
     addOns: [] as RentalAddOn[],
     loading: false,
-    error: null as string | null
+    error: null as string | null,
   }),
 
   actions: {
@@ -18,15 +16,15 @@ export const useAddOnStore = defineStore('addon', {
       this.error = null
 
       try {
-        const res = await axios.get(baseUrl)
+        const res = await apiClient.get('/addons')
         this.addOns = res.data ?? []
         return this.addOns
       } catch (err: any) {
         this.error = err.message
-        toast.error("Gagal memuat add-ons: " + err.message)
+        toast.error('Gagal memuat add-ons: ' + err.message)
       } finally {
         this.loading = false
       }
-    }
-  }
+    },
+  },
 })
