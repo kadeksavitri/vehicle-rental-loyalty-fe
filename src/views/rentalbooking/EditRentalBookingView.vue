@@ -72,6 +72,7 @@ onMounted(async () => {
     return
   }
 
+  
   if (data.status !== 'Upcoming') {
     toast.error('Only Upcoming bookings can be edited')
     router.replace(`/bookings/${bookingId}`)
