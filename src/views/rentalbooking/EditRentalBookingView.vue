@@ -8,9 +8,8 @@ import { useVehicleStore } from '@/stores/vehicle/vehicle.store'
 import { useLocationStore } from '@/stores/additional/location.store'
 import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.store'
 import { useAddOnStore } from '@/stores/additional/addon.store'
-import { calculateAddOnTotal } from '@/service/booking-calculator'
+import { calculateAddOnTotal, calculateDays } from '@/service/booking-calculator'
 import { rentalBookingService } from '@/service/rentalbooking.service'
-import { previewVehiclePrice } from '@/service/booking-calculator'
 import type {
   CreateRentalBookingRequest,
   UpdateRentalBookingRequest,
@@ -155,14 +154,18 @@ const selectVehicle = (v: any) => {
   booking.value.vehicleId = v.id
   booking.value.vehicleDailyPrice = v.price
 
-  const preview = previewVehiclePrice(
-    v.price,
-    booking.value.pickUpTime,
-    booking.value.dropOffTime,
-    booking.value.includeDriver,
-  )
-  summary.value = preview
-  booking.value.totalPrice = preview.grandTotal
+  const days = calculateDays(booking.value.pickUpTime, booking.value.dropOffTime)
+  const driverFee = booking.value.includeDriver ? days * 100000 : 0
+  const basePrice = v.calculatedPrice
+  const grandTotal = basePrice + driverFee
+
+  summary.value = {
+    days,
+    basePrice,
+    driverFee,
+    grandTotal,
+  }
+  booking.value.totalPrice = grandTotal
 }
 
 const cancel = () => router.push(`/bookings/${bookingId}`)
@@ -274,7 +277,7 @@ const saveBooking = async () => {
           "
           @click="selectVehicle(v)"
         >
-          <p class="font-semibold">{{ v.brand }} {{ v.booking }} ({{ v.type }})</p>
+          <p class="font-semibold">{{ v.brand }} {{ v.model }} ({{ v.type }})</p>
           <p class="mt-1 text-gray-600">
             Total Price:
             <b class="text-[#1aa546]">Rp {{ v.calculatedPrice.toLocaleString('id-ID') }}</b>

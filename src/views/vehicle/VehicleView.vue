@@ -37,7 +37,8 @@ const filteredVehicles = computed(() => {
 const columns: ColumnDef<Vehicle>[] = [
   {
     header: 'No',
-    cell: ({ row }) => h('span', {}, row.index + 1),
+    id: 'no',
+    cell: () => null,
   },
   { header: 'ID', accessorKey: 'id' },
   { header: 'Type', accessorKey: 'type' },
@@ -107,7 +108,10 @@ const columns: ColumnDef<Vehicle>[] = [
       <!-- Data Table -->
       <VDataTable :data="filteredVehicles" :columns="columns" :page-size="5">
         <template #cell="{ column, cell }">
-          <template v-if="column.id === 'status'">
+          <template v-if="column.id === 'no'">
+            <span>{{ cell.row.index + 1 }}</span>
+          </template>
+          <template v-else-if="column.id === 'status'">
             <span
               :class="
                 cell.row.original.status === 'Available'

@@ -3,6 +3,7 @@ import {
   useVueTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   FlexRender,
 } from '@tanstack/vue-table'
 import type { ColumnDef } from '@tanstack/vue-table'
@@ -29,6 +30,7 @@ const table = useVueTable<T>({
   },
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
   initialState: {
     pagination: {
       pageSize: props.pageSize,
@@ -52,11 +54,21 @@ const table = useVueTable<T>({
               :key="header.id"
               class="px-6 py-4 text-left text-sm font-medium text-gray-700"
             >
-              <FlexRender
+              <div
                 v-if="!header.isPlaceholder"
-                :render="header.column.columnDef.header"
-                :props="header.getContext()"
-              />
+                class="flex items-center gap-2 cursor-pointer select-none"
+                @click="
+                  header.column.getToggleSortingHandler
+                    ? header.column.getToggleSortingHandler()
+                    : null
+                "
+              >
+                <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+                <span v-if="header.column.getIsSorted">
+                  <span v-if="header.column.getIsSorted() === 'asc'">▲</span>
+                  <span v-else-if="header.column.getIsSorted() === 'desc'">▼</span>
+                </span>
+              </div>
             </th>
           </tr>
         </thead>

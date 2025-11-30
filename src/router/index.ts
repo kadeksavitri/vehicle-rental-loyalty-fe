@@ -18,6 +18,10 @@ import ManageCouponsView from '@/views/loyalty/ManageCouponsView.vue'
 import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
 import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
 import EditCouponView from '@/views/loyalty/EditCouponView.vue'
+import MaintenanceListView from '@/views/maintenance/MaintenanceListView.vue'
+import MaintenanceDetailView from '@/views/maintenance/MaintenanceDetailView.vue'
+import CreateMaintenanceView from '@/views/maintenance/CreateMaintenanceView.vue'
+import EditMaintenanceView from '@/views/maintenance/EditMaintenanceView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue' // masih place holder
@@ -134,6 +138,30 @@ const router = createRouter({
       path: '/bookings/statistics',
       name: 'statistics',
       component: ChartBookingView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance',
+      name: 'maintenance-list',
+      component: MaintenanceListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/add',
+      name: 'maintenance-create',
+      component: CreateMaintenanceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/:id',
+      name: 'maintenance-detail',
+      component: MaintenanceDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/:id/edit',
+      name: 'maintenance-edit',
+      component: EditMaintenanceView,
       meta: { requiresAuth: true },
     },
     {

@@ -33,6 +33,16 @@ const getCouponLink = () => {
         Vehicles
       </RouterLink>
       <RouterLink
+        v-if="canViewVehicles()"
+        to="/maintenance"
+        class="font-semibold transition-colors"
+        :class="
+          getLinkClass('/maintenance') ? 'text-[#1aa546]' : 'text-gray-600 hover:text-[#147e35]'
+        "
+      >
+        Maintenance
+      </RouterLink>
+      <RouterLink
         to="/bookings"
         class="font-semibold transition-colors"
         :class="getLinkClass('/bookings') ? 'text-[#1aa546]' : 'text-gray-600 hover:text-[#147e35]'"
