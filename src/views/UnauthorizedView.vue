@@ -37,4 +37,5 @@ const goHome = () => {
       </div>
     </div>
   </main>
+  
 </template>
