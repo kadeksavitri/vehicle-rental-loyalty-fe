@@ -1,45 +1,43 @@
-import axios from 'axios'
+import apiClient from '@/lib/api'
 import type {
   LoyaltyAccount,
   Coupon,
   CreateCouponRequest,
   UpdateCouponRequest,
   PurchaseCouponRequest,
-  PurchasedCoupon
+  PurchasedCoupon,
 } from '@/interfaces/loyalty.interface'
-
-const BASE = import.meta.env.VITE_API_URL + '/loyalty'
 
 export const loyaltyService = {
   getPoints(customerId: string) {
-    return axios.get(`${BASE}/points/${customerId}`)
+    return apiClient.get(`/loyalty/points/${customerId}`)
   },
 
   addPoints(customerId: string, points: number) {
-    return axios.post(`${BASE}/points/add/${customerId}?points=${points}`)
+    return apiClient.post(`/loyalty/points/add/${customerId}?points=${points}`)
   },
 
   getAllCoupons() {
-    return axios.get(`${BASE}/coupons`)
+    return apiClient.get('/loyalty/coupons')
   },
 
   createCoupon(payload: CreateCouponRequest) {
-    return axios.post(`${BASE}/coupons`, payload)
+    return apiClient.post('/loyalty/coupons', payload)
   },
 
   updateCoupon(couponId: string, payload: UpdateCouponRequest) {
-    return axios.put(`${BASE}/coupons/${couponId}`, payload)
+    return apiClient.put(`/loyalty/coupons/${couponId}`, payload)
   },
 
   purchaseCoupon(customerId: string, payload: PurchaseCouponRequest) {
-    return axios.post(`${BASE}/purchase/${customerId}`, payload)
+    return apiClient.post(`/loyalty/purchase/${customerId}`, payload)
   },
 
   getPurchasedCoupons(customerId: string) {
-    return axios.get(`${BASE}/purchased/${customerId}`)
+    return apiClient.get(`/loyalty/purchased/${customerId}`)
   },
 
   useCoupon(code: string, customerId: string) {
-    return axios.post(`${BASE}/use`, { code, customerId })
-  }
+    return apiClient.post('/loyalty/use', { code, customerId })
+  },
 }

@@ -58,6 +58,7 @@ export interface CreateRentalBookingRequest {
 
 export interface UpdateRentalBookingRequest {
   id: string
+  customerId: string
   vehicleId: string
   pickUpTime: string
   dropOffTime: string
@@ -91,4 +92,3 @@ export interface ChartRentalBookingRequest {
   period: 'Monthly' | 'Quarterly'
   year: number
 }
-
