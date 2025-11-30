@@ -10,6 +10,8 @@ variables:
 build:
   stage: build
   image: node:20
+  only:
+    - loyalty
   script:
     - npm ci
     - npm run build
