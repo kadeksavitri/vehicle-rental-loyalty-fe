@@ -6,6 +6,7 @@ import VButton from '@/components/common/VButton.vue'
 import VDeleteVehicleButton from '@/components/vehicle/VDeleteVehicleButton.vue'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
 import { toast } from 'vue-sonner'
+import { canUpdateVehicle, canDeleteVehicle } from '@/lib/rbac'
 
 const route = useRoute()
 const router = useRouter()
@@ -42,35 +43,38 @@ const handleDelete = async () => {
     toast.error('Failed to delete vehicle')
   }
 }
-
-
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow p-8">
-
-      <div v-if="loading" class="text-center text-gray-500 py-20">
-        Loading vehicle details...
-      </div>
+      <div v-if="loading" class="text-center text-gray-500 py-20">Loading vehicle details...</div>
 
       <div v-else-if="vehicle">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-xl font-bold text-gray-800">Vehicle Details</h2>
           <div class="flex gap-2">
             <VButton
-                class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg whitespace-nowrap"
-               @click="router.push(`/vehicles/${vehicle.id}/edit`)"
+              v-if="canUpdateVehicle()"
+              class="bg-[#1aa546] hover:bg-[#007f66] text-white font-semibold px-6 py-2 rounded-lg whitespace-nowrap"
+              @click="router.push(`/vehicles/${vehicle.id}/edit`)"
             >
               Update Vehicle Details
             </VButton>
-            <VDeleteVehicleButton :vehicle-id="vehicle.id" @deleted="handleDelete" />
+            <VDeleteVehicleButton
+              v-if="canDeleteVehicle()"
+              :vehicle-id="vehicle.id"
+              @deleted="handleDelete"
+            />
           </div>
         </div>
-
         <div class="grid grid-cols-2 gap-x-10 gap-y-3 text-sm">
           <p><b>Vehicle ID</b><br />{{ vehicle.id }}</p>
-          <p><b>Vendor Name</b><br /><span class="font-semibold text-[#1aa546]">{{ vehicle.rentalVendorName }}</span></p>
+          <p>
+            <b>Vendor Name</b><br /><span class="font-semibold text-[#1aa546]">{{
+              vehicle.rentalVendorName
+            }}</span>
+          </p>
 
           <p><b>Vehicle Type</b><br />{{ vehicle.type }}</p>
           <p><b>Vehicle Brand</b><br />{{ vehicle.brand }}</p>
@@ -78,7 +82,9 @@ const handleDelete = async () => {
           <p><b>Vehicle Model</b><br />{{ vehicle.model }}</p>
           <p><b>Vehicle Production Year</b><br />{{ vehicle.productionYear }}</p>
 
-          <p><b>Location</b><br /><span class="font-semibold">{{ vehicle.location }}</span></p>
+          <p>
+            <b>Location</b><br /><span class="font-semibold">{{ vehicle.location }}</span>
+          </p>
           <p><b>License Plate</b><br />{{ vehicle.licensePlate }}</p>
 
           <p><b>Capacity</b><br />{{ vehicle.capacity }} orang</p>
@@ -105,9 +111,7 @@ const handleDelete = async () => {
         </div>
       </div>
 
-      <div v-else class="text-center text-gray-500 py-20">
-        Vehicle not found.
-      </div>
+      <div v-else class="text-center text-gray-500 py-20">Vehicle not found.</div>
     </div>
   </div>
 </template>
