@@ -3,8 +3,6 @@ import { onMounted, ref } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import { useAuthStore } from '@/stores/auth/auth.store'
 import VButton from '@/components/common/VButton.vue'
-import VDataTable from '@/components/common/VDataTable.vue'
-import type { ColumnDef } from '@tanstack/vue-table'
 import type { Coupon } from '@/interfaces/loyalty.interface'
 
 const store = useLoyaltyStore()
@@ -22,17 +20,6 @@ onMounted(async () => {
     userPoints.value = store.points
   }
 })
-
-const columns: ColumnDef<Coupon>[] = [
-  { header: 'Name', accessorKey: 'name' },
-  { header: 'Points', accessorKey: 'points' },
-  { header: 'Discount %', accessorKey: 'percentOff' },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: () => null,
-  },
-]
 
 const openPurchaseModal = (coupon: Coupon) => {
   selectedCoupon.value = coupon
@@ -67,7 +54,7 @@ const cancelPurchase = () => {
 </script>
 
 <template>
-  <main class="pt-24 px-4">
+  <main class="pt-24 px-4 w-4/5 mx-auto">
     <div class="flex justify-between items-center mb-6">
       <div>
         <h2 class="text-xl font-bold text-[#1aa546]">Available Coupons</h2>
@@ -79,21 +66,40 @@ const cancelPurchase = () => {
       </div>
     </div>
 
-    <VDataTable :data="store.coupons" :columns="columns">
-      <template #cell="{ column, cell }">
-        <template v-if="column.id === 'actions'">
-          <VButton
-            class="bg-[#1aa546] text-white text-sm px-4 py-1"
-            @click="openPurchaseModal(cell.row.original)"
-          >
-            Purchase
-          </VButton>
-        </template>
-        <template v-else>
-          {{ cell.getValue() }}
-        </template>
-      </template>
-    </VDataTable>
+    <!-- Coupon Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        v-for="coupon in store.coupons"
+        :key="coupon.id"
+        class="bg-white rounded-lg shadow-md border border-gray-200 p-4 flex flex-col"
+      >
+        <h3 class="text-base font-bold text-gray-800 mb-1">{{ coupon.name }}</h3>
+        <p class="text-xs text-gray-600 mb-3 grow line-clamp-2">{{ coupon.description }}</p>
+
+        <div class="space-y-1 mb-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-gray-600">Discount:</span>
+            <span class="font-semibold text-sm text-[#1aa546]">{{ coupon.percentOff }}%</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-xs text-gray-600">Points:</span>
+            <span class="font-semibold text-sm text-gray-800">{{ coupon.points }}</span>
+          </div>
+        </div>
+
+        <VButton
+          class="bg-[#1aa546] hover:bg-[#147e35] text-white text-xs px-3 py-1.5 w-full"
+          @click="openPurchaseModal(coupon)"
+        >
+          Purchase
+        </VButton>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-if="store.coupons.length === 0" class="text-center py-12 text-gray-500">
+      No coupons available at the moment.
+    </div>
 
     <!-- Purchase Confirmation Modal -->
     <div

@@ -1,14 +1,19 @@
 import { defineStore } from 'pinia'
 import { toast } from 'vue-sonner'
 import { loyaltyService } from '@/service/loyalty.service'
-import type { CreateCouponRequest, UpdateCouponRequest } from '@/interfaces/loyalty.interface'
+import type {
+  CreateCouponRequest,
+  UpdateCouponRequest,
+  Coupon,
+  PurchasedCoupon,
+} from '@/interfaces/loyalty.interface'
 
 export const useLoyaltyStore = defineStore('loyalty', {
   state: () => ({
-    coupons: [],
-    purchasedCoupons: [],
+    coupons: [] as Coupon[],
+    purchasedCoupons: [] as PurchasedCoupon[],
     points: 0,
-    loading: false
+    loading: false,
   }),
 
   actions: {
@@ -23,24 +28,23 @@ export const useLoyaltyStore = defineStore('loyalty', {
     },
 
     async createCoupon(payload: CreateCouponRequest) {
-    await loyaltyService.createCoupon(payload)
-    toast.success('Coupon created')
+      await loyaltyService.createCoupon(payload)
+      toast.success('Coupon created')
     },
 
     async updateCoupon(id: string, payload: UpdateCouponRequest) {
-    await loyaltyService.updateCoupon(id, payload)
-    toast.success('Coupon updated')
+      await loyaltyService.updateCoupon(id, payload)
+      toast.success('Coupon updated')
     },
 
     async purchaseCoupon(customerId: string, couponId: string) {
-    await loyaltyService.purchaseCoupon(customerId, { couponId })
-    toast.success('Coupon purchased')
+      await loyaltyService.purchaseCoupon(customerId, { couponId })
+      toast.success('Coupon purchased')
     },
 
     async fetchPurchasedCoupons(customerId: string) {
-    const res = await loyaltyService.getPurchasedCoupons(customerId)
-    this.purchasedCoupons = res.data.data
+      const res = await loyaltyService.getPurchasedCoupons(customerId)
+      this.purchasedCoupons = res.data.data
     },
-
-  }
+  },
 })

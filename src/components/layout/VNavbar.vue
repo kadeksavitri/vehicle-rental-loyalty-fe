@@ -6,7 +6,8 @@ import VLogoutButton from '../auth/VLogoutButton.vue'
 import VButton from '../common/VButton.vue'
 
 const router = useRouter()
-const userId = getCurrentUser()?.id
+const currentUser = getCurrentUser()
+const userId = currentUser?.id
 
 const getLinkClass = (path: string) => router.currentRoute.value.path.startsWith(path)
 
@@ -23,7 +24,7 @@ const getCouponLink = () => {
       Vehicle Rental App
     </RouterLink>
 
-    <div v-if="isAuthenticated()" class="flex space-x-8">
+    <div v-if="isAuthenticated()" class="flex space-x-8 ml-10">
       <RouterLink
         v-if="canViewVehicles()"
         to="/vehicles"
@@ -50,7 +51,11 @@ const getCouponLink = () => {
     </div>
 
     <div class="ml-auto">
-      <div v-if="isAuthenticated()">
+      <div v-if="isAuthenticated()" class="flex items-center gap-4">
+        <div class="text-sm text-gray-700">
+          <span class="font-semibold mr-2">{{ currentUser?.username }}</span>
+          <span class="text-gray-500">({{ currentUser?.roleName || currentUser?.role }})</span>
+        </div>
         <VLogoutButton />
       </div>
       <RouterLink v-else to="/login" :class="getLinkClass('/login')">
