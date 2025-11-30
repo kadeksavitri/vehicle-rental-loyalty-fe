@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { ref } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import VButton from '@/components/common/VButton.vue'
@@ -35,4 +35,4 @@ const submit = async () => {
       <VButton class="bg-[#1aa546] text-white" @click="submit">Save</VButton>
     </div>
   </main>
-</template>
+</template> -->

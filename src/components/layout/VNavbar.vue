@@ -25,7 +25,7 @@ const getLinkClass = (path: string) => router.currentRoute.value.path.startsWith
       <RouterLink to="/bookings" class="font-semibold transition-colors" :class="getLinkClass('/bookings') ? 'text-[#1aa546]' : 'text-gray-600 hover:text-[#147e35]'">
         Bookings
       </RouterLink>
-      <RouterLink to="/loyalty" class="font-semibold transition-colors" :class="getLinkClass('/bookings') ? 'text-[#1aa546]' : 'text-gray-600 hover:text-[#147e35]'">
+      <RouterLink to="/" class="font-semibold transition-colors" :class="getLinkClass('/bookings') ? 'text-[#1aa546]' : 'text-gray-600 hover:text-[#147e35]'">
         Coupons
       </RouterLink>
     </div>

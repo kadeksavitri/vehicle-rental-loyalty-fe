@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import { useAuthStore } from '@/stores/auth/auth.store'
@@ -24,4 +24,4 @@ const columns: ColumnDef<any>[] = [
     <h2 class="text-xl font-bold text-[#1aa546] mb-6">My Purchased Coupons</h2>
     <VDataTable :data="store.purchasedCoupons" :columns="columns" />
   </main>
-</template>
+</template> -->

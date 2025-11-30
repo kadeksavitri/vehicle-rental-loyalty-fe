@@ -12,11 +12,11 @@ import EditRentalBookingView from '@/views/rentalbooking/EditRentalBookingView.v
 import EditAddOnBookingView from '@/views/rentalbooking/EditAddOnBookingView.vue'
 import EditStatusBookingView from '@/views/rentalbooking/EditStatusBookingView.vue'
 import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
-import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
-import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
-import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
-import CouponListView from '@/views/loyalty/CouponListView.vue'
-import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
+// import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
+// import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
+// import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
+// import CouponListView from '@/views/loyalty/CouponListView.vue'
+// import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
 // import EditCouponView from '@/views/loyalty/EditCouponView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
@@ -134,36 +134,36 @@ const router = createRouter({
       component: ChartBookingView,
       meta: { requiresAuth: true },
     },
-    {
-      path: '/loyalty',
-      name: 'loyalty',
-      component: LoyaltyDashboardView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/loyalty/available',
-      name: 'loyalty-available',
-      component: AvailableCouponsView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/loyalty/purchased',
-      name: 'loyalty-purchased',
-      component: PurchasedCouponsView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/loyalty/admin',
-      name: 'loyalty-admin',
-      component: CouponListView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/loyalty/admin/create',
-      name: 'loyalty-admin-create',
-      component: CreateCouponView,
-      meta: { requiresAuth: true },
-    },
+    // {
+    //   path: '/loyalty',
+    //   name: 'loyalty',
+    //   component: LoyaltyDashboardView,
+    //   meta: { requiresAuth: true },
+    // },
+    // {
+    //   path: '/loyalty/available',
+    //   name: 'loyalty-available',
+    //   component: AvailableCouponsView,
+    //   meta: { requiresAuth: true },
+    // },
+    // {
+    //   path: '/loyalty/purchased',
+    //   name: 'loyalty-purchased',
+    //   component: PurchasedCouponsView,
+    //   meta: { requiresAuth: true },
+    // },
+    // {
+    //   path: '/loyalty/admin',
+    //   name: 'loyalty-admin',
+    //   component: CouponListView,
+    //   meta: { requiresAuth: true },
+    // },
+    // {
+    //   path: '/loyalty/admin/create',
+    //   name: 'loyalty-admin-create',
+    //   component: CreateCouponView,
+    //   meta: { requiresAuth: true },
+    // },
     // {
     //   path: '/loyalty/admin/edit/:id',
     //   name: 'loyalty-admin-edit',

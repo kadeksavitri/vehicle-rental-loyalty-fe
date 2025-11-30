@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import { useAuthStore } from '@/stores/auth/auth.store'
@@ -40,4 +40,4 @@ const buy = (id: string) => store.purchaseCoupon(customerId, id)
       </template>
     </VDataTable>
   </main>
-</template>
+</template> -->

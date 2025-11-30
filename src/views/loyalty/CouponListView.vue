@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
 import VButton from '@/components/common/VButton.vue'
@@ -39,4 +39,4 @@ const columns: ColumnDef<any>[] = [
       </template>
     </VDataTable>
   </main>
-</template>
+</template> -->
