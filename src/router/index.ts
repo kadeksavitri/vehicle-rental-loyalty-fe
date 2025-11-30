@@ -14,6 +14,7 @@ import EditStatusBookingView from '@/views/rentalbooking/EditStatusBookingView.v
 import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
 import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
 import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
+import ManageCouponsView from '@/views/loyalty/ManageCouponsView.vue'
 import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
 import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
 import EditCouponView from '@/views/loyalty/EditCouponView.vue'
@@ -146,6 +147,12 @@ const router = createRouter({
       name: 'loyalty-available',
       component: AvailableCouponsView,
       meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
+    },
+    {
+      path: '/loyalty/manage',
+      name: 'loyalty-manage',
+      component: ManageCouponsView,
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
     },
     {
       path: '/loyalty/purchased',

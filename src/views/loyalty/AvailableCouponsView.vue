@@ -5,7 +5,6 @@ import { useAuthStore } from '@/stores/auth/auth.store'
 import VButton from '@/components/common/VButton.vue'
 import VDataTable from '@/components/common/VDataTable.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { isSuperadmin, isCustomer } from '@/lib/rbac'
 import type { Coupon } from '@/interfaces/loyalty.interface'
 
 const store = useLoyaltyStore()
@@ -18,13 +17,13 @@ const userPoints = ref(0)
 
 onMounted(async () => {
   await store.fetchAllCoupons()
-  if (isCustomer() && customerId) {
+  if (customerId) {
     await store.fetchPoints(customerId)
     userPoints.value = store.points
   }
 })
 
-const columns: ColumnDef<any>[] = [
+const columns: ColumnDef<Coupon>[] = [
   { header: 'Name', accessorKey: 'name' },
   { header: 'Points', accessorKey: 'points' },
   { header: 'Discount %', accessorKey: 'percentOff' },
@@ -71,15 +70,10 @@ const cancelPurchase = () => {
   <main class="pt-24 px-4">
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h2 class="text-xl font-bold text-[#1aa546]">
-          {{ isSuperadmin() ? 'Manage Coupons' : 'Available Coupons' }}
-        </h2>
+        <h2 class="text-xl font-bold text-[#1aa546]">Available Coupons</h2>
       </div>
       <div class="flex items-center gap-4">
-        <router-link v-if="isSuperadmin()" to="/loyalty/admin/create">
-          <VButton class="bg-[#1aa546] text-white px-6">Create Coupon</VButton>
-        </router-link>
-        <div v-if="isCustomer()" class="text-sm font-semibold text-gray-700">
+        <div class="text-sm font-semibold text-gray-700">
           Your Points: <span class="text-[#1aa546]">{{ userPoints }}</span>
         </div>
       </div>
@@ -88,11 +82,7 @@ const cancelPurchase = () => {
     <VDataTable :data="store.coupons" :columns="columns">
       <template #cell="{ column, cell }">
         <template v-if="column.id === 'actions'">
-          <router-link v-if="isSuperadmin()" :to="`/loyalty/admin/edit/${cell.row.original.id}`">
-            <VButton class="bg-blue-600 text-white text-sm px-4 py-1">Edit</VButton>
-          </router-link>
           <VButton
-            v-else-if="isCustomer()"
             class="bg-[#1aa546] text-white text-sm px-4 py-1"
             @click="openPurchaseModal(cell.row.original)"
           >
@@ -160,7 +150,7 @@ const cancelPurchase = () => {
           </button>
           <button
             @click="confirmPurchase"
-            :disabled="selectedCoupon && userPoints < selectedCoupon.points"
+            :disabled="!!(selectedCoupon && userPoints < selectedCoupon.points)"
             class="flex-1 px-4 py-2 bg-[#1aa546] text-white rounded-lg hover:bg-[#147e35] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Confirm Purchase

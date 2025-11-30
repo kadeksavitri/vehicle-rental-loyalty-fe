@@ -74,9 +74,7 @@ const table = useVueTable<T>({
               "
             >
               <slot name="cell" :column="cell.column" :cell="cell" :row="row">
-                <template v-if="cell.column.id !== 'actions'">
-                  <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-                </template>
+                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
               </slot>
             </td>
           </tr>

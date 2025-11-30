@@ -77,7 +77,7 @@ const save = async () => {
   }
 
   await store.updateCoupon(id, payload)
-  router.push('/loyalty/available')
+  router.push('/loyalty/manage')
 }
 </script>
 

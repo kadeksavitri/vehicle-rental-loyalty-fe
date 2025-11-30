@@ -11,7 +11,7 @@ const userId = getCurrentUser()?.id
 const getLinkClass = (path: string) => router.currentRoute.value.path.startsWith(path)
 
 const getCouponLink = () => {
-  return isSuperadmin() ? '/loyalty/available' : '/loyalty'
+  return isSuperadmin() ? '/loyalty/manage' : '/loyalty'
 }
 </script>
 

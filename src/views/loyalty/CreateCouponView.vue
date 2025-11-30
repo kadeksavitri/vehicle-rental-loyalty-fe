@@ -62,7 +62,7 @@ const submit = async () => {
   }
 
   await store.createCoupon(payload)
-  router.push('/loyalty/admin')
+  router.push('/loyalty/manage')
 }
 </script>
 
