@@ -9,7 +9,7 @@ import { useAddOnStore } from '@/stores/additional/addon.store'
 import VButton from '@/components/common/VButton.vue'
 import type { RentalBooking } from '@/interfaces/rentalbooking.interface'
 import VDeleteBookingButton from '@/components/rentalbooking/VDeleteBookingButton.vue'
-
+import { canUpdateBooking, canDeleteBooking, canAccessBooking } from '@/lib/rbac'
 
 const router = useRouter()
 const route = useRoute()
@@ -21,19 +21,21 @@ const addOnStore = useAddOnStore()
 const displayedAddOns = computed(() => {
   if (!booking.value) return []
   const catalog = addOnStore.addOns ?? []
-  return (booking.value.listOfAddOns ?? []).map(a => {
-    if (!a) return null
-    // booking.listOfAddOns from backend is a list of add-on names (strings)
-    if (typeof a === 'string') {
-      // try find by id first, then by name
-      const byId = catalog.find(x => x.id === a)
-      if (byId) return byId
-      const byName = catalog.find(x => x.name === a)
-      if (byName) return byName
-      return { id: a, name: a, price: 0 }
-    }
-    return a
-  }).filter(Boolean)
+  return (booking.value.listOfAddOns ?? [])
+    .map((a) => {
+      if (!a) return null
+      // booking.listOfAddOns from backend is a list of add-on names (strings)
+      if (typeof a === 'string') {
+        // try find by id first, then by name
+        const byId = catalog.find((x) => x.id === a)
+        if (byId) return byId
+        const byName = catalog.find((x) => x.name === a)
+        if (byName) return byName
+        return { id: a, name: a, price: 0 }
+      }
+      return a
+    })
+    .filter(Boolean)
 })
 const showAddOns = ref(false)
 
@@ -42,18 +44,28 @@ onMounted(async () => {
   if (!data) {
     toast.error('Booking not found')
     router.push('/bookings')
-  } else {
-    booking.value = data
-    await addOnStore.fetchAddOns()
+    return
   }
+
+  // Check if user can access this booking
+  if (!canAccessBooking(data.customerId)) {
+    toast.error('You do not have permission to view this booking')
+    router.push('/unauthorized')
+    return
+  }
+
+  booking.value = data
+  await addOnStore.fetchAddOns()
 })
 
-const canUpdateDetails = computed(() => booking.value?.status === 'Upcoming')
-const canUpdateAddOns = computed(() => booking.value?.status === 'Upcoming')
+const canUpdateDetails = computed(() => booking.value?.status === 'Upcoming' && canUpdateBooking())
+const canUpdateAddOns = computed(() => booking.value?.status === 'Upcoming' && canUpdateBooking())
 const canUpdateStatus = computed(
-  () => booking.value?.status === 'Upcoming' || booking.value?.status === 'Ongoing'
+  () =>
+    (booking.value?.status === 'Upcoming' || booking.value?.status === 'Ongoing') &&
+    canUpdateBooking(),
 )
-const canCancel = computed(() => booking.value?.status === 'Upcoming')
+const canCancel = computed(() => booking.value?.status === 'Upcoming' && canDeleteBooking())
 
 const handleDelete = async () => {
   if (!booking.value) return
@@ -69,16 +81,12 @@ const handleDelete = async () => {
   } else {
     toast.error('Failed to delete booking')
   }
-  
 }
-
-
 </script>
 
 <template>
   <main class="w-full min-h-screen bg-gray-100 pt-24 pb-12 px-4 flex justify-center">
     <div class="w-full max-w-3xl bg-white shadow-lg rounded-xl p-8">
-
       <!-- HEADER SECTION -->
       <div class="flex justify-between items-center border-b pb-4 mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Booking Details</h2>
@@ -111,41 +119,38 @@ const handleDelete = async () => {
           <VDeleteBookingButton
             v-if="canCancel"
             :rentalBookingId="booking?.id!"
-            @deleted="handleDelete "
+            @deleted="handleDelete"
           />
-
-
         </div>
       </div>
 
       <!-- DETAILS -->
       <div v-if="booking" class="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 text-gray-700">
-
         <div>
           <p>
-            <strong>Booking ID</strong><br>
+            <strong>Booking ID</strong><br />
             <span class="text-green-600 font-semibold">{{ booking.id }}</span>
           </p>
 
           <p>
-            <strong>Pick-up Time</strong><br>
+            <strong>Pick-up Time</strong><br />
             <span class="text-green-600 font-semibold">
-{{ booking?.pickUpTime ? new Date(booking.pickUpTime).toLocaleString() : '-' }}
+              {{ booking?.pickUpTime ? new Date(booking.pickUpTime).toLocaleString() : '-' }}
             </span>
           </p>
 
           <p>
-            <strong>Pick-up Location</strong><br>
+            <strong>Pick-up Location</strong><br />
             <span class="text-green-600 font-semibold">{{ booking.pickUpLocation }}</span>
           </p>
 
           <p>
-            <strong>Include Driver?</strong><br>
+            <strong>Include Driver?</strong><br />
             <span>{{ booking.includeDriver ? 'Yes' : 'No' }}</span>
           </p>
 
           <p>
-            <strong>Total Price</strong><br>
+            <strong>Total Price</strong><br />
             <span class="text-green-600 font-semibold">
               Rp {{ booking.totalPrice.toLocaleString('id-ID') }}
             </span>
@@ -154,7 +159,7 @@ const handleDelete = async () => {
 
         <div>
           <p>
-            <strong>Vehicle ID</strong><br>
+            <strong>Vehicle ID</strong><br />
             <span
               class="text-blue-700 font-semibold underline cursor-pointer"
               @click="router.push(`/vehicles/${booking.vehicleId}`)"
@@ -164,23 +169,22 @@ const handleDelete = async () => {
           </p>
 
           <p>
-            <strong>Drop-off Time</strong><br>
+            <strong>Drop-off Time</strong><br />
             <span class="text-green-600 font-semibold">
               {{ new Date(booking.dropOffTime).toLocaleString() }}
             </span>
           </p>
 
           <p>
-            <strong>Drop-off Location</strong><br>
+            <strong>Drop-off Location</strong><br />
             <span class="text-green-600 font-semibold">{{ booking.dropOffLocation }}</span>
           </p>
 
           <p>
-            <strong>Status</strong><br>
+            <strong>Status</strong><br />
             <span class="text-green-600 font-semibold">{{ booking.status }}</span>
           </p>
         </div>
-
       </div>
 
       <!-- BUTTONS -->
@@ -199,7 +203,6 @@ const handleDelete = async () => {
           Back
         </VButton>
       </div>
-
     </div>
 
     <div
@@ -208,7 +211,6 @@ const handleDelete = async () => {
       @click.self="showAddOns = false"
     >
       <div class="bg-white p-6 rounded-xl w-full max-w-2xl shadow-xl">
-        
         <!-- Header -->
         <div class="flex justify-between items-center border-b pb-3 mb-4">
           <h3 class="text-xl font-bold">Included Add-Ons</h3>
@@ -218,17 +220,13 @@ const handleDelete = async () => {
         <!-- Add-ons List -->
         <ul v-if="displayedAddOns.length" class="list-disc pl-5 space-y-2 text-gray-700">
           <li v-for="addon in displayedAddOns" :key="addon!.id">
-            {{ addon!.name }} – 
-            Rp {{ (addon!.price ?? 0).toLocaleString('id-ID') }}
+            {{ addon!.name }} – Rp {{ (addon!.price ?? 0).toLocaleString('id-ID') }}
           </li>
         </ul>
 
         <!-- Empty -->
-        <p v-else class="text-gray-500 italic">
-          No add-ons included.
-        </p>
+        <p v-else class="text-gray-500 italic">No add-ons included.</p>
       </div>
     </div>
   </main>
 </template>
-

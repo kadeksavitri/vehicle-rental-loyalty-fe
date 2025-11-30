@@ -2,6 +2,7 @@
 
 export interface RentalBooking {
   id: string
+  customerId: string
   vehicleId: string
   pickUpTime: string
   dropOffTime: string
@@ -40,6 +41,7 @@ export interface RentalAddOn {
 }
 
 export interface CreateRentalBookingRequest {
+  customerId: string
   vehicleId: string
   pickUpTime: string
   dropOffTime: string

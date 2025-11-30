@@ -6,7 +6,7 @@ import VDataTable from '@/components/common/VDataTable.vue'
 import VButton from '@/components/common/VButton.vue'
 import type { ColumnDef } from '@tanstack/vue-table'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
-
+import { canCreateVehicle } from '@/lib/rbac'
 
 const vehicleStore = useVehicleStore()
 const searchKeyword = ref('')
@@ -19,18 +19,16 @@ onMounted(async () => {
 })
 
 // format harga
-const formatRupiah = (n: number) =>
-  `Rp ${n.toLocaleString('id-ID', { minimumFractionDigits: 0 })}`
+const formatRupiah = (n: number) => `Rp ${n.toLocaleString('id-ID', { minimumFractionDigits: 0 })}`
 
 // filter data by search + type
 const filteredVehicles = computed(() => {
-  return vehicleStore.vehicles.filter(v => {
+  return vehicleStore.vehicles.filter((v) => {
     const keywordMatch =
       v.brand.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
       v.model.toLowerCase().includes(searchKeyword.value.toLowerCase())
 
-    const typeMatch =
-      filterType.value === 'All' || v.type === filterType.value
+    const typeMatch = filterType.value === 'All' || v.type === filterType.value
 
     return keywordMatch && typeMatch
   })
@@ -57,7 +55,7 @@ const columns: ColumnDef<Vehicle>[] = [
               ? 'text-green-600 font-semibold'
               : 'text-red-500 font-semibold',
         },
-        row.original.status
+        row.original.status,
       ),
   },
   {
@@ -72,10 +70,9 @@ const columns: ColumnDef<Vehicle>[] = [
         RouterLink,
         {
           to: `/vehicles/${row.original.id}`,
-          class:
-            'bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-4 rounded-md',
+          class: 'bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-4 rounded-md',
         },
-        'Detail'
+        'Detail',
       ),
   },
 ]
@@ -84,12 +81,12 @@ const columns: ColumnDef<Vehicle>[] = [
 <template>
   <div class="min-h-screen bg-gray-50 p-6 font-sans">
     <h1 class="text-2xl font-bold text-[#1aa546] mb-6 text-center">Vehicle List</h1>
-    <div class="max-w-6xl mx-auto bg-white shadow-lg ring-1 ring-gray-200/70 rounded-2xl  p-6">
-
+    <div class="max-w-6xl mx-auto bg-white shadow-lg ring-1 ring-gray-200/70 rounded-2xl p-6">
       <!-- Button Row -->
       <div class="flex flex-wrap justify-between items-center mb-5 gap-3">
         <div class="flex gap-2">
           <RouterLink
+            v-if="canCreateVehicle()"
             to="/vehicles/add"
             class="bg-[#1aa546] hover:bg-[#15903c] text-white font-semibold px-4 py-2 rounded-md"
           >

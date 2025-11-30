@@ -61,8 +61,8 @@ export function clearLocalStorage(): void {
 export function getAuthToken(): string | null {
   try {
     // Get token directly without JSON parsing (tokens are stored as plain strings)
-    // const token = localStorage.getItem('token');
-    const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluIiwiaWQiOiJlNWY3MDMxMy0zYTBhLTQ0MjktODBhZC05ZTYzMmQ4YWY3ZWMiLCJlbWFpbCI6InN1cGVyYWRtaW5AdG91cnBhY2thZ2UuY29tIiwibmFtZSI6IlN1cGVyIEFkbWluaXN0cmF0b3IiLCJyb2xlIjoiU3VwZXJhZG1pbiIsImlhdCI6MTc2NDQxNTI3MiwiZXhwIjoxNzY0NTAxNjcyfQ.Iakzbi6NjTMmHCKnRmH2hJyISb-NRuKG1BaD3w1BLrQ"
+    const token = localStorage.getItem('token');
+    // const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdXBlcmFkbWluIiwiaWQiOiJlNWY3MDMxMy0zYTBhLTQ0MjktODBhZC05ZTYzMmQ4YWY3ZWMiLCJlbWFpbCI6InN1cGVyYWRtaW5AdG91cnBhY2thZ2UuY29tIiwibmFtZSI6IlN1cGVyIEFkbWluaXN0cmF0b3IiLCJyb2xlIjoiU3VwZXJhZG1pbiIsImlhdCI6MTc2NDQxNTI3MiwiZXhwIjoxNzY0NTAxNjcyfQ.Iakzbi6NjTMmHCKnRmH2hJyISb-NRuKG1BaD3w1BLrQ"
 
     // Check if token is wrapped in quotes (old format with JSON.stringify)
     if (token && token.startsWith('"') && token.endsWith('"')) {
