@@ -24,8 +24,8 @@ export class VehicleService {
             VehicleService.instance = new VehicleService();
         }
 
-        // 
         return VehicleService.instance;
+        
     }
 
   createVehicle(vehicle: VehicleRequest): Vehicle {
