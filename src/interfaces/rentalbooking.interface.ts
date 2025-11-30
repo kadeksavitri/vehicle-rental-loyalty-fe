@@ -58,6 +58,7 @@ export interface CreateRentalBookingRequest {
 
 export interface UpdateRentalBookingRequest {
   id: string
+  customerId: string
   vehicleId: string
   pickUpTime: string
   dropOffTime: string

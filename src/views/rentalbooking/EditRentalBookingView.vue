@@ -31,6 +31,7 @@ const addOnStore = useAddOnStore()
 
 // booking booking (reuse create booking shape)
 const booking = ref<UpdateRentalBookingRequest>({
+  customerId: '',
   id: bookingId,
   vehicleId: '',
   pickUpLocation: '',
@@ -214,6 +215,7 @@ const saveBooking = async () => {
 
   const payload: UpdateRentalBookingRequest = {
     id: bookingId,
+    customerId: originalBooking.value.customerId,
     vehicleId: booking.value.vehicleId,
     pickUpTime: booking.value.pickUpTime as unknown as string,
     dropOffTime: booking.value.dropOffTime as unknown as string,
