@@ -10,8 +10,15 @@ import { useRentalBookingStore } from '@/stores/rentalbooking/rentalbooking.stor
 import { useAddOnStore } from '@/stores/additional/addon.store'
 import { calculateAddOnTotal } from '@/service/booking-calculator'
 import { rentalBookingService } from '@/service/rentalbooking.service'
-import { previewVehiclePrice, calculateDays } from '@/service/booking-calculator'
-import type { CreateRentalBookingRequest, UpdateRentalBookingRequest, RentalBooking, RentalAddOn } from '@/interfaces/rentalbooking.interface'
+import { previewVehiclePrice } from '@/service/booking-calculator'
+import type {
+  CreateRentalBookingRequest,
+  UpdateRentalBookingRequest,
+  RentalBooking,
+  RentalAddOn,
+} from '@/interfaces/rentalbooking.interface'
+import apiClient from '@/lib/api'
+import type { CommonResponseInterface } from '@/interfaces/common.response.interface'
 
 const router = useRouter()
 const route = useRoute()
@@ -36,7 +43,7 @@ const booking = ref<UpdateRentalBookingRequest>({
   totalPrice: 0,
   vehicleDailyPrice: 0,
   status: '',
-  listOfAddOns: []
+  listOfAddOns: [],
 })
 
 const originalBooking = ref<RentalBooking | null>(null)
@@ -84,13 +91,16 @@ onMounted(async () => {
 
   // backend returns add-ons as names (RentalBookingResponseDTO.listOfAddOns = List<String> names)
   // map those names back to add-on IDs using the add-on catalog we just fetched
-  const mappedAddOnIds = (data.listOfAddOns ?? []).map((item: any) => {
-    if (!item) return null
-    const str = String(item)
-    // try find by id first, then by name
-    const found = addons.value.find(a => a.id === str) || addons.value.find(a => a.name === str)
-    return found ? found.id : null
-  }).filter(Boolean) as string[]
+  const mappedAddOnIds = (data.listOfAddOns ?? [])
+    .map((item: any) => {
+      if (!item) return null
+      const str = String(item)
+      // try find by id first, then by name
+      const found =
+        addons.value.find((a) => a.id === str) || addons.value.find((a) => a.name === str)
+      return found ? found.id : null
+    })
+    .filter(Boolean) as string[]
 
   booking.value.listOfAddOns = mappedAddOnIds
 
@@ -104,26 +114,39 @@ onMounted(async () => {
 
 // search vehicles for given booking criteria
 const searchVehicles = async () => {
-  const allVehicles = (await vehicleStore.fetchVehicles()) ?? []
+  try {
+    const searchPayload = {
+      pickUpLocation: booking.value.pickUpLocation,
+      dropOffLocation: booking.value.dropOffLocation,
+      pickUpTime: booking.value.pickUpTime,
+      dropOffTime: booking.value.dropOffTime,
+      capacityNeeded: booking.value.capacityNeeded,
+      transmissionNeeded: booking.value.transmissionNeeded,
+    }
 
-  // calculate days for the requested period
-  const days = calculateDays(booking.value.pickUpTime, booking.value.dropOffTime)
-
-  availableVehicles.value = allVehicles
-    .filter(v =>
-      v.capacity >= booking.value.capacityNeeded &&
-      v.transmission.toLowerCase() === booking.value.transmissionNeeded.toLowerCase() &&
-      v.status === 'Available' &&
-      v.location === booking.value.pickUpLocation
+    const response = await apiClient.post<CommonResponseInterface<any[]>>(
+      '/vehicles/search',
+      searchPayload,
     )
-    .map(v => ({
-      ...v,
-      calculatedPrice: v.price * days
-    }))
 
-  selectedVehicle.value = null
-  summary.value = null
-  showResults.value = true
+    availableVehicles.value = response.data.data ?? []
+
+    if (availableVehicles.value.length === 0) {
+      toast.warning('No vehicles available for the requested period')
+    } else {
+      toast.success(`Found ${availableVehicles.value.length} available vehicle(s)`)
+    }
+
+    selectedVehicle.value = null
+    summary.value = null
+    showResults.value = true
+  } catch (error: any) {
+    const errorMessage =
+      error?.response?.data?.message || error.message || 'Failed to search vehicles'
+    toast.error(`Error: ${errorMessage}`)
+    availableVehicles.value = []
+    showResults.value = false
+  }
 }
 
 const selectVehicle = (v: any) => {
@@ -131,7 +154,12 @@ const selectVehicle = (v: any) => {
   booking.value.vehicleId = v.id
   booking.value.vehicleDailyPrice = v.price
 
-  const preview = previewVehiclePrice(v.price, booking.value.pickUpTime, booking.value.dropOffTime, booking.value.includeDriver)
+  const preview = previewVehiclePrice(
+    v.price,
+    booking.value.pickUpTime,
+    booking.value.dropOffTime,
+    booking.value.includeDriver,
+  )
   summary.value = preview
   booking.value.totalPrice = preview.grandTotal
 }
@@ -169,15 +197,18 @@ const saveBooking = async () => {
     toast.error('waktu pengambilan harus sebelum waktu pengembalian')
     return
   }
-  const preservedAddOnIds = (booking.value.listOfAddOns && booking.value.listOfAddOns.length > 0)
-    ? booking.value.listOfAddOns
-    : (originalBooking.value.listOfAddOns ?? []).map(a => (typeof a === 'string' ? a : (a as any).id))
+  const preservedAddOnIds =
+    booking.value.listOfAddOns && booking.value.listOfAddOns.length > 0
+      ? booking.value.listOfAddOns
+      : (originalBooking.value.listOfAddOns ?? []).map((a) =>
+          typeof a === 'string' ? a : (a as any).id,
+        )
 
   const preview = rentalBookingService.previewVehiclePrice(
     booking.value.vehicleDailyPrice,
     booking.value.pickUpTime as unknown as string,
     booking.value.dropOffTime as unknown as string,
-    booking.value.includeDriver
+    booking.value.includeDriver,
   )
   const addOnTotal = calculateAddOnTotal(preservedAddOnIds, addons.value)
 
@@ -217,7 +248,6 @@ const saveBooking = async () => {
 <template>
   <main class="pt-8 pb-20 px-4">
     <div class="max-w-3xl mx-auto">
-
       <VBookingForm
         :action="searchVehicles"
         :bookingModel="booking"
@@ -227,16 +257,19 @@ const saveBooking = async () => {
       />
 
       <!-- Vehicle List -->
-      <div v-if="showResults" class="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto flex flex-col gap-4 font-sans -mt-8">
-        <h3 class="text-xl font-bold text-[#1aa546] mb-3">
-          Available Vehicles 
-        </h3>
+      <div
+        v-if="showResults"
+        class="bg-white rounded-xl shadow-md p-8 max-w-2xl mx-auto flex flex-col gap-4 font-sans -mt-8"
+      >
+        <h3 class="text-xl font-bold text-[#1aa546] mb-3">Available Vehicles</h3>
 
         <div
           v-for="v in availableVehicles"
           :key="v.id"
           class="p-4 border rounded-lg mb-3 cursor-pointer border-gray-300"
-          :class="selectedVehicle?.id === v.id ? 'bg-green-200 border-green-600' : 'hover:bg-green-50'"
+          :class="
+            selectedVehicle?.id === v.id ? 'bg-green-200 border-green-600' : 'hover:bg-green-50'
+          "
           @click="selectVehicle(v)"
         >
           <p class="font-semibold">{{ v.brand }} {{ v.booking }} ({{ v.type }})</p>
@@ -249,35 +282,34 @@ const saveBooking = async () => {
         <div v-if="availableVehicles.length === 0" class="text-center text-gray-500">
           No matching vehicles.
         </div>
-    
 
-      <div v-if="summary" class = "-mt-2">
-      <div class="mt-6 border rounded-xl p-5">
-        <h3 class="text-lg font-bold text-[#1aa546] mb-2">Booking Price Details</h3>
+        <div v-if="summary" class="-mt-2">
+          <div class="mt-6 border rounded-xl p-5">
+            <h3 class="text-lg font-bold text-[#1aa546] mb-2">Booking Price Details</h3>
 
-        <p>
-          Price per Day ({{ summary.days }} day{{ summary.days > 1 ? '(s)' : '' }}):
-          <b class="float-right">Rp {{  summary.basePrice.toLocaleString('id-ID')}}</b>
-        </p>
+            <p>
+              Price per Day ({{ summary.days }} day{{ summary.days > 1 ? '(s)' : '' }}):
+              <b class="float-right">Rp {{ summary.basePrice.toLocaleString('id-ID') }}</b>
+            </p>
 
-        <p v-if="booking.includeDriver" class="mt-2">
-          Driver Fee:
-          <b class="float-right">Rp {{ summary.driverFee.toLocaleString('id-ID') }}</b>
-        </p>
+            <p v-if="booking.includeDriver" class="mt-2">
+              Driver Fee:
+              <b class="float-right">Rp {{ summary.driverFee.toLocaleString('id-ID') }}</b>
+            </p>
 
-        <div class="border-t mt-2 pt-2 text-xl font-bold text-[#1aa546]">
-          Grand Total:
-          <span class="float-right text-lg  text-[#1aa546] font-bold">
-            Rp {{ summary.grandTotal.toLocaleString('id-ID')}}
-          </span>
+            <div class="border-t mt-2 pt-2 text-xl font-bold text-[#1aa546]">
+              Grand Total:
+              <span class="float-right text-lg text-[#1aa546] font-bold">
+                Rp {{ summary.grandTotal.toLocaleString('id-ID') }}
+              </span>
+            </div>
+
+            <div class="flex gap-4 mt-6">
+              <VButton class="w-full bg-gray-400 text-white" @click="cancel">Cancel</VButton>
+              <VButton class="w-full bg-[#1aa546] text-white" @click="saveBooking">Save</VButton>
+            </div>
+          </div>
         </div>
-
-        <div class="flex gap-4 mt-6">
-          <VButton class="w-full bg-gray-400 text-white" @click="cancel">Cancel</VButton>
-          <VButton class="w-full bg-[#1aa546] text-white" @click="saveBooking">Save</VButton>
-        </div>
-      </div>
-      </div>
       </div>
     </div>
   </main>

@@ -90,6 +90,10 @@ export function canUpdateBooking(): boolean {
   return isSuperadmin() || isCustomer()
 }
 
+export function canUpdateBookingStatus(): boolean {
+  return isSuperadmin() || isRentalVendor()
+}
+
 export function canDeleteBooking(): boolean {
   return isSuperadmin() || isCustomer()
 }

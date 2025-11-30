@@ -4,16 +4,21 @@ import VButton from '../common/VButton.vue'
 import VDropdown from '../common/VDropdown.vue'
 import { ref, toRefs, watch, type PropType } from 'vue'
 import { useRouter } from 'vue-router'
-import type { CreateRentalBookingRequest } from '@/interfaces/rentalbooking.interface'
+import type {
+  CreateRentalBookingRequest,
+  UpdateRentalBookingRequest,
+} from '@/interfaces/rentalbooking.interface'
 import type { Vehicle } from '@/interfaces/vehicle.interface'
 
 const props = defineProps({
   action: {
-    type: Function as PropType<(data: CreateRentalBookingRequest) => Promise<void>>,
+    type: Function as PropType<
+      (data: CreateRentalBookingRequest | UpdateRentalBookingRequest) => Promise<void>
+    >,
     required: true,
   },
   bookingModel: {
-    type: Object as PropType<CreateRentalBookingRequest>,
+    type: Object as PropType<CreateRentalBookingRequest | UpdateRentalBookingRequest>,
     required: true,
   },
   availableLocations: {
@@ -23,7 +28,7 @@ const props = defineProps({
   isEdit: {
     type: Boolean,
     default: false,
-  }
+  },
 })
 
 const model = ref(props.bookingModel)
@@ -33,7 +38,7 @@ watch(
   (newVal) => {
     model.value = newVal
   },
-  { deep: true }
+  { deep: true },
 )
 watch(model, (v) => emit('update:modelValue', v), { deep: true })
 
@@ -73,8 +78,8 @@ const transmissionOptions = [
   >
     <h2 class="text-xl font-bold text-[#1aa546] mb-4">
       {{ props.isEdit ? 'Update Rental Booking' : 'Create a New Rental Booking' }}
-    </h2>  
-    
+    </h2>
+
     <div class="border-b border-gray-500 -mt-6"></div>
 
     <div class="flex items-center gap-2 mt-4">
@@ -84,16 +89,14 @@ const transmissionOptions = [
         v-model="includeDriver"
         class="w-4 h-4 text-[#1aa546] border-gray-300 rounded focus:ring-[#1aa546]"
       />
-      <label for="includeDriver" class="text-gray-700 font-medium">
-        Include Driver?
-      </label>
+      <label for="includeDriver" class="text-gray-700 font-medium"> Include Driver? </label>
     </div>
 
     <VDropdown
       id="pickUpLocation"
       label="Pick-up Location"
       v-model="model.pickUpLocation"
-      :options="availableLocations.map(loc => ({ value: loc, label: loc }))"
+      :options="availableLocations.map((loc) => ({ value: loc, label: loc }))"
       placeholder="-- Select Pick-up Location --"
     />
 
@@ -101,16 +104,11 @@ const transmissionOptions = [
       id="dropOffLocation"
       label="Drop-off Location"
       v-model="model.dropOffLocation"
-      :options="availableLocations.map(loc => ({ value: loc, label: loc }))"
+      :options="availableLocations.map((loc) => ({ value: loc, label: loc }))"
       placeholder="-- Select Drop-off Location --"
     />
 
-    <VInput
-      id="pickUpTime"
-      type="datetime-local"
-      label="Pick-up Time"
-      v-model="model.pickUpTime"
-    />
+    <VInput id="pickUpTime" type="datetime-local" label="Pick-up Time" v-model="model.pickUpTime" />
 
     <VInput
       id="dropOffTime"
@@ -130,11 +128,7 @@ const transmissionOptions = [
     <div class="flex flex-col gap-2">
       <label class="font-semibold text-[#1aa546]">Transmission</label>
       <div class="flex gap-4">
-        <label
-          v-for="opt in transmissionOptions"
-          :key="opt.value"
-          class="flex items-center gap-2"
-        >
+        <label v-for="opt in transmissionOptions" :key="opt.value" class="flex items-center gap-2">
           <input
             type="radio"
             :value="opt.value"

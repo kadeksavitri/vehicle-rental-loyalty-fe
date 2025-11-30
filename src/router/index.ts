@@ -32,6 +32,7 @@ import {
   canViewBookings,
   canCreateBooking,
   canUpdateBooking,
+  canUpdateBookingStatus,
   canAccessLoyalty,
 } from '@/lib/rbac'
 import { toast } from 'vue-sonner'
@@ -119,7 +120,7 @@ const router = createRouter({
       path: '/bookings/:id/update-status',
       name: 'update-status',
       component: EditStatusBookingView,
-      meta: { requiresAuth: true, permission: 'canUpdateBooking' },
+      meta: { requiresAuth: true, permission: 'canUpdateBookingStatus' },
     },
     {
       path: '/bookings/:id',
@@ -191,6 +192,7 @@ router.beforeEach((to, from, next) => {
       canUpdateVehicle,
       canCreateBooking,
       canUpdateBooking,
+      canUpdateBookingStatus,
     }
 
     const hasPermission = permissionFunctions[permission]?.()

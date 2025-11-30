@@ -9,7 +9,12 @@ import { useAddOnStore } from '@/stores/additional/addon.store'
 import VButton from '@/components/common/VButton.vue'
 import type { RentalBooking } from '@/interfaces/rentalbooking.interface'
 import VDeleteBookingButton from '@/components/rentalbooking/VDeleteBookingButton.vue'
-import { canUpdateBooking, canDeleteBooking, canAccessBooking } from '@/lib/rbac'
+import {
+  canUpdateBooking,
+  canUpdateBookingStatus,
+  canDeleteBooking,
+  canAccessBooking,
+} from '@/lib/rbac'
 
 const router = useRouter()
 const route = useRoute()
@@ -63,7 +68,7 @@ const canUpdateAddOns = computed(() => booking.value?.status === 'Upcoming' && c
 const canUpdateStatus = computed(
   () =>
     (booking.value?.status === 'Upcoming' || booking.value?.status === 'Ongoing') &&
-    canUpdateBooking(),
+    canUpdateBookingStatus(),
 )
 const canCancel = computed(() => booking.value?.status === 'Upcoming' && canDeleteBooking())
 
