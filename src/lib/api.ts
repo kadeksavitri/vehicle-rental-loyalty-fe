@@ -1,13 +1,23 @@
 import axios from 'axios'
 import { getAuthToken } from './auth'
 
+// Determine base URL based on environment
+const getBaseURL = () => {
+  // In development with Vite proxy, use relative path
+  if (import.meta.env.DEV) {
+    return '/api'
+  }
+  // In production, use full URL
+  return import.meta.env.VITE_API_URL || 'http://2306203236-be.hafizmuh.site/api'
+}
+
 // Create axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'X-API-KEY': import.meta.env.VITE_API_KEY, 
+    'X-API-KEY': import.meta.env.VITE_API_KEY,
   },
 })
 
@@ -23,7 +33,7 @@ apiClient.interceptors.request.use(
     }
     return config
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 )
 
 // Add response interceptor for error handling
@@ -39,7 +49,7 @@ apiClient.interceptors.response.use(
       }
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export default apiClient
