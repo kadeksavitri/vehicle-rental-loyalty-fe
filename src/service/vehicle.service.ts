@@ -23,6 +23,8 @@ export class VehicleService {
         if (!VehicleService.instance) {
             VehicleService.instance = new VehicleService();
         }
+
+        // 
         return VehicleService.instance;
     }
 
