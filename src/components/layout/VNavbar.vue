@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { useRouter, RouterLink } from 'vue-router'
 import { isAuthenticated, canViewVehicles, canAccessCouponPages, isSuperadmin } from '@/lib/rbac'
-import { getCurrentUser } from '@/lib/auth'
+import { useAuthStore } from '@/stores/auth/auth.store'
 import VLogoutButton from '../auth/VLogoutButton.vue'
 import VButton from '../common/VButton.vue'
 
 const router = useRouter()
-const currentUser = getCurrentUser()
-const userId = currentUser?.id
+const authStore = useAuthStore()
 
 const getLinkClass = (path: string) => router.currentRoute.value.path.startsWith(path)
 
@@ -53,8 +52,10 @@ const getCouponLink = () => {
     <div class="ml-auto">
       <div v-if="isAuthenticated()" class="flex items-center gap-4">
         <div class="text-sm text-gray-700">
-          <span class="font-semibold mr-2">{{ currentUser?.username }}</span>
-          <span class="text-gray-500">({{ currentUser?.roleName || currentUser?.role }})</span>
+          <span class="font-semibold mr-2">{{ authStore.user?.username }}</span>
+          <span class="text-gray-500"
+            >({{ authStore.user?.roleName || authStore.user?.role }})</span
+          >
         </div>
         <VLogoutButton />
       </div>
