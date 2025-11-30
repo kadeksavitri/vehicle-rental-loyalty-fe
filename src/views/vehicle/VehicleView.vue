@@ -46,34 +46,20 @@ const columns: ColumnDef<Vehicle>[] = [
   { header: 'Capacity', accessorKey: 'capacity' },
   {
     header: 'Status',
-    cell: ({ row }) =>
-      h(
-        'span',
-        {
-          class:
-            row.original.status === 'Available'
-              ? 'text-green-600 font-semibold'
-              : 'text-red-500 font-semibold',
-        },
-        row.original.status,
-      ),
+    accessorKey: 'status',
+    id: 'status',
+    cell: () => null,
   },
   {
     header: 'Price per Day',
-    cell: ({ row }) => h('span', {}, formatRupiah(row.original.price)),
+    accessorKey: 'price',
+    id: 'price',
+    cell: () => null,
   },
   {
     header: 'Action',
     id: 'actions',
-    cell: ({ row }) =>
-      h(
-        RouterLink,
-        {
-          to: `/vehicles/${row.original.id}`,
-          class: 'bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-4 rounded-md',
-        },
-        'Detail',
-      ),
+    cell: () => null,
   },
 ]
 </script>
@@ -119,7 +105,35 @@ const columns: ColumnDef<Vehicle>[] = [
       </div>
 
       <!-- Data Table -->
-      <VDataTable :data="filteredVehicles" :columns="columns" :page-size="5" />
+      <VDataTable :data="filteredVehicles" :columns="columns" :page-size="5">
+        <template #cell="{ column, cell }">
+          <template v-if="column.id === 'status'">
+            <span
+              :class="
+                cell.row.original.status === 'Available'
+                  ? 'text-green-600 font-semibold'
+                  : 'text-red-500 font-semibold'
+              "
+            >
+              {{ cell.row.original.status }}
+            </span>
+          </template>
+          <template v-else-if="column.id === 'price'">
+            <span>{{ formatRupiah(cell.row.original.price) }}</span>
+          </template>
+          <template v-else-if="column.id === 'actions'">
+            <RouterLink
+              :to="`/vehicles/${cell.row.original.id}`"
+              class="bg-green-600 hover:bg-green-700 text-white font-semibold py-1 px-4 rounded-md inline-block"
+            >
+              Detail
+            </RouterLink>
+          </template>
+          <template v-else>
+            {{ cell.getValue() }}
+          </template>
+        </template>
+      </VDataTable>
     </div>
   </div>
 </template>

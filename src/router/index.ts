@@ -15,7 +15,6 @@ import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
 import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
 import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
 import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
-import CouponListView from '@/views/loyalty/CouponListView.vue'
 import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
 import EditCouponView from '@/views/loyalty/EditCouponView.vue'
 
@@ -34,6 +33,8 @@ import {
   canUpdateBooking,
   canUpdateBookingStatus,
   canAccessLoyalty,
+  canAccessCouponPages,
+  canManageCoupons,
 } from '@/lib/rbac'
 import { toast } from 'vue-sonner'
 
@@ -138,37 +139,31 @@ const router = createRouter({
       path: '/loyalty',
       name: 'loyalty',
       component: LoyaltyDashboardView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
     },
     {
       path: '/loyalty/available',
       name: 'loyalty-available',
       component: AvailableCouponsView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
     },
     {
       path: '/loyalty/purchased',
       name: 'loyalty-purchased',
       component: PurchasedCouponsView,
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/loyalty/admin',
-      name: 'loyalty-admin',
-      component: CouponListView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
     },
     {
       path: '/loyalty/admin/create',
       name: 'loyalty-admin-create',
       component: CreateCouponView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
     },
     {
       path: '/loyalty/admin/edit/:id',
       name: 'loyalty-admin-edit',
       component: EditCouponView,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
     },
   ],
 })
@@ -193,6 +188,8 @@ router.beforeEach((to, from, next) => {
       canCreateBooking,
       canUpdateBooking,
       canUpdateBookingStatus,
+      canAccessCouponPages,
+      canManageCoupons,
     }
 
     const hasPermission = permissionFunctions[permission]?.()

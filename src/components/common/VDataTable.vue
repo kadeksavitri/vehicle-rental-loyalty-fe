@@ -38,15 +38,14 @@ const table = useVueTable<T>({
 </script>
 
 <template>
-  <div class="bg-white rounded-lg  overflow-hidden">
+  <div class="bg-white rounded-lg overflow-hidden">
     <div class="overflow-x-auto border border-gray-300 rounded-lg">
-
       <table class="w-full">
         <thead>
           <tr
             v-for="headerGroup in table.getHeaderGroups()"
             :key="headerGroup.id"
-            class="border-b border-gray-200 "
+            class="border-b border-gray-200"
           >
             <th
               v-for="header in headerGroup.headers"
@@ -70,9 +69,15 @@ const table = useVueTable<T>({
             <td
               v-for="cell in row.getVisibleCells()"
               :key="cell.id"
-              :class="cell.column.id === 'actions' ? 'px-4 py-4' : 'px-6 py-4 text-sm text-gray-600'"
+              :class="
+                cell.column.id === 'actions' ? 'px-4 py-4' : 'px-6 py-4 text-sm text-gray-600'
+              "
             >
-              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+              <slot name="cell" :column="cell.column" :cell="cell" :row="row">
+                <template v-if="cell.column.id !== 'actions'">
+                  <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+                </template>
+              </slot>
             </td>
           </tr>
           <tr v-if="table.getRowModel().rows.length === 0">

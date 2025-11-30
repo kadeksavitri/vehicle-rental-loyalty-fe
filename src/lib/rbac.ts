@@ -113,3 +113,15 @@ export function canAccessBooking(customerId: string): boolean {
 export function canAccessLoyalty(): boolean {
   return isAuthenticated()
 }
+
+export function canManageCoupons(): boolean {
+  return isSuperadmin()
+}
+
+export function canPurchaseCoupons(): boolean {
+  return isCustomer()
+}
+
+export function canAccessCouponPages(): boolean {
+  return isSuperadmin() || isCustomer()
+}
