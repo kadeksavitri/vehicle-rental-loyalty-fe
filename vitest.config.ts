@@ -9,11 +9,11 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./src/test/setup.ts'],
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        singleThread: true
-      }
-    }
+    // poolOptions: {
+    //   threads: {
+    //     singleThread: true
+    //   }
+    // }
   },
   resolve: {
     alias: {
