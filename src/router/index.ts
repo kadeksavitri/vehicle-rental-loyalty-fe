@@ -17,7 +17,7 @@ import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
 import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
 import CouponListView from '@/views/loyalty/CouponListView.vue'
 import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
-import EditCouponView from '@/views/loyalty/EditCouponView.vue'
+// import EditCouponView from '@/views/loyalty/EditCouponView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue' // masih place holder
@@ -164,12 +164,12 @@ const router = createRouter({
       component: CreateCouponView,
       meta: { requiresAuth: true },
     },
-    {
-      path: '/loyalty/admin/edit/:id',
-      name: 'loyalty-admin-edit',
-      component: EditCouponView,
-      meta: { requiresAuth: true },
-    },
+    // {
+    //   path: '/loyalty/admin/edit/:id',
+    //   name: 'loyalty-admin-edit',
+    //   component: EditCouponView,
+    //   meta: { requiresAuth: true },
+    // },
   ],
 })
 

@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useLoyaltyStore } from '@/stores/loyalty/loyalty.store'
@@ -53,4 +53,4 @@ const save = async () => {
       <VButton class="bg-[#1aa546] text-white" @click="save">Update</VButton>
     </div>
   </main>
-</template>
+</template> -->
