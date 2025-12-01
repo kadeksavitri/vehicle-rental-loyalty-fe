@@ -1,5 +1,5 @@
 <template>
-  <button class="v-button">
+  <button v-bind="$attrs" class="v-button">
     <slot></slot>
   </button>
 </template>
@@ -8,6 +8,6 @@
 @reference "@/assets/main.css";
 
 .v-button {
-  @apply w-full text-lg font-semibold hover:text-white py-1 rounded-2xl;
+  @apply w-full text-lg font-semibold hover:text-white py-1 rounded-2xl cursor-pointer;
 }
 </style>

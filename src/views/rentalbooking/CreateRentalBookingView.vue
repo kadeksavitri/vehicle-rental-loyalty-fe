@@ -8,7 +8,7 @@ import { useLocationStore } from '@/stores/additional/location.store'
 import { useTempBookingStore } from '@/stores/rentalbooking/booking-temp.store'
 import VBookingForm from '@/components/rentalbooking/VBookingForm.vue'
 import VButton from '@/components/common/VButton.vue'
-import { previewVehiclePrice } from '@/service/booking-calculator'
+import { calculateDays } from '@/service/booking-calculator'
 import type { CreateRentalBookingRequest } from '@/interfaces/rentalbooking.interface'
 import apiClient from '@/lib/api'
 import type { CommonResponseInterface } from '@/interfaces/common.response.interface'
@@ -123,14 +123,18 @@ const selectVehicle = (v: any) => {
   booking.value.vehicleId = v.id
   booking.value.vehicleDailyPrice = v.price
 
-  const preview = previewVehiclePrice(
-    v.price,
-    booking.value.pickUpTime,
-    booking.value.dropOffTime,
-    booking.value.includeDriver,
-  )
-  summary.value = preview
-  booking.value.totalPrice = preview.grandTotal
+  const days = calculateDays(booking.value.pickUpTime, booking.value.dropOffTime)
+  const driverFee = booking.value.includeDriver ? days * 100000 : 0
+  const basePrice = v.calculatedPrice
+  const grandTotal = basePrice + driverFee
+
+  summary.value = {
+    days,
+    basePrice,
+    driverFee,
+    grandTotal,
+  }
+  booking.value.totalPrice = grandTotal
 }
 
 const proceedToAddOns = () => {
@@ -150,11 +154,13 @@ watch(
   (newVal) => {
     if (!selectedVehicle.value || !summary.value) return
     const days = summary.value.days || 1
-    const basePrice = selectedVehicle.value.price * days
+    const basePrice = selectedVehicle.value.calculatedPrice
     const driverFee = newVal ? days * 100000 : 0
-    booking.value.totalPrice = basePrice + driverFee
+    const grandTotal = basePrice + driverFee
+
+    booking.value.totalPrice = grandTotal
     summary.value.driverFee = driverFee
-    summary.value.grandTotal = booking.value.totalPrice
+    summary.value.grandTotal = grandTotal
   },
 )
 </script>

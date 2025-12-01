@@ -3,6 +3,7 @@ import {
   useVueTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   FlexRender,
 } from '@tanstack/vue-table'
 import type { ColumnDef } from '@tanstack/vue-table'
@@ -29,6 +30,7 @@ const table = useVueTable<T>({
   },
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
+  getSortedRowModel: getSortedRowModel(),
   initialState: {
     pagination: {
       pageSize: props.pageSize,
@@ -38,26 +40,35 @@ const table = useVueTable<T>({
 </script>
 
 <template>
-  <div class="bg-white rounded-lg  overflow-hidden">
+  <div class="bg-white rounded-lg overflow-hidden">
     <div class="overflow-x-auto border border-gray-300 rounded-lg">
-
       <table class="w-full">
         <thead>
           <tr
             v-for="headerGroup in table.getHeaderGroups()"
             :key="headerGroup.id"
-            class="border-b border-gray-200 "
+            class="border-b border-gray-200"
           >
             <th
               v-for="header in headerGroup.headers"
               :key="header.id"
               class="px-6 py-4 text-left text-sm font-medium text-gray-700"
             >
-              <FlexRender
+              <div
                 v-if="!header.isPlaceholder"
-                :render="header.column.columnDef.header"
-                :props="header.getContext()"
-              />
+                class="flex items-center gap-2 cursor-pointer select-none"
+                @click="
+                  header.column.getToggleSortingHandler
+                    ? header.column.getToggleSortingHandler()
+                    : null
+                "
+              >
+                <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+                <span v-if="header.column.getIsSorted">
+                  <span v-if="header.column.getIsSorted() === 'asc'">▲</span>
+                  <span v-else-if="header.column.getIsSorted() === 'desc'">▼</span>
+                </span>
+              </div>
             </th>
           </tr>
         </thead>
@@ -70,9 +81,13 @@ const table = useVueTable<T>({
             <td
               v-for="cell in row.getVisibleCells()"
               :key="cell.id"
-              :class="cell.column.id === 'actions' ? 'px-4 py-4' : 'px-6 py-4 text-sm text-gray-600'"
+              :class="
+                cell.column.id === 'actions' ? 'px-4 py-4' : 'px-6 py-4 text-sm text-gray-600'
+              "
             >
-              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+              <slot name="cell" :column="cell.column" :cell="cell" :row="row">
+                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+              </slot>
             </td>
           </tr>
           <tr v-if="table.getRowModel().rows.length === 0">

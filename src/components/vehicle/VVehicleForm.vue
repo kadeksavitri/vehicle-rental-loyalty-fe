@@ -2,9 +2,12 @@
 import VInput from '../common/VInput.vue'
 import VButton from '../common/VButton.vue'
 import VDropdown from '../common/VDropdown.vue'
-import { type PropType, ref, watch, toRefs } from 'vue'
+import { type PropType, ref, watch, toRefs, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { VehicleRequest } from '@/interfaces/vehicle.interface'
+
+// Stores
+import { useAuthStore } from '@/stores/auth/auth.store'
 
 // Stores
 import { useLocationStore } from '@/stores/additional/location.store'
@@ -25,11 +28,12 @@ const props = defineProps({
         {
           id: number,
           name: string,
+          email: string,
           listOfLocations: string[]
         }
     */
     type: Array as PropType<
-      { id: number; name: string; listOfLocations: string[] }[]
+      { id: number; name: string; email: string; listOfLocations: string[] }[]
     >,
     required: true,
   },
@@ -42,12 +46,39 @@ const props = defineProps({
 const router = useRouter()
 const model = toRefs(props).vehicleModel
 
-// 🔥 Lokasi dinamis berdasarkan vendor yang dipilih
+// Auth store: determine if current user is superadmin
+const authStore = useAuthStore()
+const isSuperadmin = computed(() => {
+  const rn = (authStore.user?.roleName ?? authStore.user?.role ?? '').toString()
+  return rn.toLowerCase().includes('superadmin')
+})
+
+// For vendor users, find their vendor by matching email
+const currentUserVendor = computed(() => {
+  if (isSuperadmin.value) return null
+  const userEmail = authStore.user?.email
+  return props.vendors.find((v) => v.email === userEmail) ?? null
+})
+
+// If logged in user is NOT superadmin (i.e. vendor) and we're creating a vehicle,
+// set rentalVendorId to the vendor id that matches the logged-in user's email
+if (!isSuperadmin.value && !props.isEdit && currentUserVendor.value) {
+  model.value.rentalVendorId = currentUserVendor.value.id as any
+}
+
+// Lokasi dinamis berdasarkan vendor yang dipilih
 const availableLocations = ref<string[]>([])
 
 watch(
   () => model.value.rentalVendorId,
   (vendorId) => {
+    // For vendor users, use their own vendor's locations
+    if (!isSuperadmin.value && currentUserVendor.value) {
+      availableLocations.value = currentUserVendor.value.listOfLocations
+      return
+    }
+
+    // For superadmin, use the selected vendor's locations
     const vendor = props.vendors.find((v) => v.id === Number(vendorId))
     availableLocations.value = vendor?.listOfLocations ?? []
 
@@ -56,7 +87,7 @@ watch(
       model.value.location = ''
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 // STATIC OPTIONS
@@ -104,12 +135,13 @@ const handleCancel = () => router.push('/vehicles')
 
     <div class="border-b border-gray-500 -mt-6"></div>
 
-    <!-- Vendor -->
+    <!-- Vendor (only visible to Superadmin) -->
     <VDropdown
+      v-if="isSuperadmin"
       id="vendor"
       label="Rental Vendor"
       v-model="model.rentalVendorId"
-      :options="props.vendors.map(v => ({ value: v.id, label: v.name }))"
+      :options="props.vendors.map((v) => ({ value: v.id, label: v.name }))"
       placeholder="-- Select Vendor --"
     />
 
@@ -143,7 +175,7 @@ const handleCancel = () => router.push('/vehicles')
       id="location"
       label="Location"
       v-model="model.location"
-      :options="availableLocations.map(loc => ({ value: loc, label: loc }))"
+      :options="availableLocations.map((loc) => ({ value: loc, label: loc }))"
       placeholder="-- Select Location --"
     />
 

@@ -12,12 +12,16 @@ import EditRentalBookingView from '@/views/rentalbooking/EditRentalBookingView.v
 import EditAddOnBookingView from '@/views/rentalbooking/EditAddOnBookingView.vue'
 import EditStatusBookingView from '@/views/rentalbooking/EditStatusBookingView.vue'
 import ChartBookingView from '@/views/rentalbooking/ChartBookingView.vue'
-// import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
-// import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
-// import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
-// import CouponListView from '@/views/loyalty/CouponListView.vue'
-// import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
-// import EditCouponView from '@/views/loyalty/EditCouponView.vue'
+import LoyaltyDashboardView from '@/views/loyalty/LoyaltyDashboardView.vue'
+import AvailableCouponsView from '@/views/loyalty/AvailableCouponsView.vue'
+import ManageCouponsView from '@/views/loyalty/ManageCouponsView.vue'
+import PurchasedCouponsView from '@/views/loyalty/PurchasedCouponsView.vue'
+import CreateCouponView from '@/views/loyalty/CreateCouponView.vue'
+import EditCouponView from '@/views/loyalty/EditCouponView.vue'
+import MaintenanceListView from '@/views/maintenance/MaintenanceListView.vue'
+import MaintenanceDetailView from '@/views/maintenance/MaintenanceDetailView.vue'
+import CreateMaintenanceView from '@/views/maintenance/CreateMaintenanceView.vue'
+import EditMaintenanceView from '@/views/maintenance/EditMaintenanceView.vue'
 
 import LoginView from '@/views/auth/LoginView.vue'
 import RegisterView from '@/views/auth/RegisterView.vue' // masih place holder
@@ -34,6 +38,8 @@ import {
   canUpdateBooking,
   canUpdateBookingStatus,
   canAccessLoyalty,
+  canAccessCouponPages,
+  canManageCoupons,
 } from '@/lib/rbac'
 import { toast } from 'vue-sonner'
 
@@ -134,42 +140,66 @@ const router = createRouter({
       component: ChartBookingView,
       meta: { requiresAuth: true },
     },
-    // {
-    //   path: '/loyalty',
-    //   name: 'loyalty',
-    //   component: LoyaltyDashboardView,
-    //   meta: { requiresAuth: true },
-    // },
-    // {
-    //   path: '/loyalty/available',
-    //   name: 'loyalty-available',
-    //   component: AvailableCouponsView,
-    //   meta: { requiresAuth: true },
-    // },
-    // {
-    //   path: '/loyalty/purchased',
-    //   name: 'loyalty-purchased',
-    //   component: PurchasedCouponsView,
-    //   meta: { requiresAuth: true },
-    // },
-    // {
-    //   path: '/loyalty/admin',
-    //   name: 'loyalty-admin',
-    //   component: CouponListView,
-    //   meta: { requiresAuth: true },
-    // },
-    // {
-    //   path: '/loyalty/admin/create',
-    //   name: 'loyalty-admin-create',
-    //   component: CreateCouponView,
-    //   meta: { requiresAuth: true },
-    // },
-    // {
-    //   path: '/loyalty/admin/edit/:id',
-    //   name: 'loyalty-admin-edit',
-    //   component: EditCouponView,
-    //   meta: { requiresAuth: true },
-    // },
+    {
+      path: '/maintenance',
+      name: 'maintenance-list',
+      component: MaintenanceListView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/add',
+      name: 'maintenance-create',
+      component: CreateMaintenanceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/:id',
+      name: 'maintenance-detail',
+      component: MaintenanceDetailView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/maintenance/:id/edit',
+      name: 'maintenance-edit',
+      component: EditMaintenanceView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/loyalty',
+      name: 'loyalty',
+      component: LoyaltyDashboardView,
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
+    },
+    {
+      path: '/loyalty/available',
+      name: 'loyalty-available',
+      component: AvailableCouponsView,
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
+    },
+    {
+      path: '/loyalty/manage',
+      name: 'loyalty-manage',
+      component: ManageCouponsView,
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
+    },
+    {
+      path: '/loyalty/purchased',
+      name: 'loyalty-purchased',
+      component: PurchasedCouponsView,
+      meta: { requiresAuth: true, permission: 'canAccessCouponPages' },
+    },
+    {
+      path: '/loyalty/admin/create',
+      name: 'loyalty-admin-create',
+      component: CreateCouponView,
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
+    },
+    {
+      path: '/loyalty/admin/edit/:id',
+      name: 'loyalty-admin-edit',
+      component: EditCouponView,
+      meta: { requiresAuth: true, permission: 'canManageCoupons' },
+    },
   ],
 })
 
@@ -193,6 +223,8 @@ router.beforeEach((to, from, next) => {
       canCreateBooking,
       canUpdateBooking,
       canUpdateBookingStatus,
+      canAccessCouponPages,
+      canManageCoupons,
     }
 
     const hasPermission = permissionFunctions[permission]?.()
